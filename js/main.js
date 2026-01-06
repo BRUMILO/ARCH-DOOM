@@ -3,10 +3,12 @@ import { Engine } from './engine.js';
 import { Player } from './player.js';
 import { Level } from './level.js';
 import { QuizManager } from './quiz.js';
+import { Minimap } from './minimap.js';
 
 const engine = new Engine();
 const player = new Player(engine.camera, engine.renderer.domElement);
 const level = new Level(engine.scene);
+const minimap = new Minimap('minimap');
 
 const quizManager = new QuizManager(player.controls, () => {
     // On Level Complete
@@ -49,6 +51,9 @@ function animate() {
         });
 
         engine.render();
+
+        // Update minimap
+        minimap.update(player.camera.position, player.camera.rotation, level);
     }
 }
 

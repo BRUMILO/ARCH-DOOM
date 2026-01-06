@@ -5,24 +5,76 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Enterprise Architecture Doom</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Press+Start+2P&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <style>
         body {
             margin: 0;
             overflow: hidden;
-            background: #1a1a2e;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            font-family: 'Orbitron', sans-serif;
+            position: relative;
         }
 
-        /* Modern HUD Overlay */
+        /* Scan lines effect */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(0deg,
+                    rgba(0, 255, 255, 0.03) 0px,
+                    rgba(0, 255, 255, 0.03) 1px,
+                    transparent 1px,
+                    transparent 2px);
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* Minimap */
+        #minimap {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            border: 3px dashed #00ffff;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.8), inset 0 0 30px rgba(0, 255, 255, 0.15);
+            background: rgba(5, 5, 15, 0.98);
+            border-radius: 15px;
+            z-index: 100;
+        }
+
+        /* Minimap label */
+        #minimap::before {
+            content: 'MAP';
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 255, 255, 0.9);
+            color: #000;
+            padding: 3px 12px;
+            border-radius: 5px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 8px;
+            letter-spacing: 2px;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.8);
+        }
+
+        /* Modern HUD Overlay - ARCADE STYLE */
         #game-ui {
             position: absolute;
             bottom: 30px;
             left: 30px;
             display: flex;
-            gap: 15px;
+            gap: 20px;
             pointer-events: none;
             animation: slideUp 0.5s ease-out;
+            z-index: 50;
         }
 
         @keyframes slideUp {
@@ -38,77 +90,76 @@
         }
 
         .hud-item {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
+            background: rgba(10, 10, 20, 0.9);
+            border: 3px solid #00ffff;
+            border-radius: 8px;
             padding: 15px 25px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.5), inset 0 0 15px rgba(0, 255, 255, 0.1);
             transition: all 0.3s ease;
         }
 
         .hud-item:hover {
-            background: rgba(255, 255, 255, 0.15);
-            transform: translateY(-2px);
+            border-color: #ff00ff;
+            box-shadow: 0 0 40px rgba(255, 0, 255, 0.7), inset 0 0 20px rgba(255, 0, 255, 0.2);
         }
 
         .hud-label {
-            font-size: 11px;
-            font-weight: 600;
+            font-size: 10px;
+            color: #00ffff;
+            font-weight: 700;
+            letter-spacing: 2px;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: rgba(255, 255, 255, 0.6);
             margin-bottom: 5px;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
         }
 
         .hud-value {
             font-size: 28px;
-            font-weight: bold;
-            font-family: 'Courier New', monospace;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+            font-weight: 900;
+            color: #ffff00;
+            text-shadow: 0 0 15px rgba(255, 255, 0, 0.8);
+            font-family: 'Press Start 2P', cursive;
         }
 
         #health {
-            color: #e74c3c;
+            color: #ff00ff;
+            text-shadow: 0 0 15px rgba(255, 0, 255, 0.8);
         }
 
-        #ammo {
-            color: #f39c12;
-        }
-
+        /* Crosshair - ARCADE */
         #crosshair {
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 4px;
-            height: 4px;
-            background: #00ff88;
-            border-radius: 50%;
             transform: translate(-50%, -50%);
+            width: 30px;
+            height: 30px;
             pointer-events: none;
-            box-shadow: 0 0 10px #00ff88, 0 0 20px rgba(0, 255, 136, 0.5);
+            z-index: 40;
         }
 
         #crosshair::before,
         #crosshair::after {
             content: '';
             position: absolute;
-            background: #00ff88;
-            box-shadow: 0 0 5px #00ff88;
+            background: #00ffff;
+            box-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
         }
 
         #crosshair::before {
-            width: 12px;
-            height: 2px;
-            top: 1px;
-            left: -4px;
+            width: 20px;
+            height: 3px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
 
         #crosshair::after {
-            width: 2px;
-            height: 12px;
-            top: -4px;
-            left: 1px;
+            width: 3px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
 
         #quiz-overlay {
@@ -118,23 +169,23 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(26, 26, 46, 0.95);
+            background: rgba(10, 10, 20, 0.95);
             justify-content: center;
             align-items: center;
-            z-index: 100;
-            backdrop-filter: blur(5px);
+            z-index: 200;
+            backdrop-filter: blur(10px);
         }
 
         #quiz-box {
-            background: linear-gradient(135deg, rgba(30, 30, 50, 0.95), rgba(40, 40, 60, 0.95));
-            border: 2px solid rgba(0, 255, 136, 0.3);
-            border-radius: 20px;
+            background: rgba(10, 10, 30, 0.95);
+            border: 4px solid #ff00ff;
+            border-radius: 15px;
             padding: 40px;
             text-align: center;
             width: 80%;
             max-width: 600px;
             color: #fff;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(0, 255, 136, 0.1);
+            box-shadow: 0 0 60px rgba(255, 0, 255, 0.6), inset 0 0 30px rgba(255, 0, 255, 0.1);
         }
 
         .quiz-option {
@@ -142,35 +193,39 @@
             width: 100%;
             padding: 15px;
             margin: 10px 0;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 255, 255, 0.1);
+            border: 2px solid #00ffff;
             border-radius: 8px;
             color: #fff;
             cursor: pointer;
             text-align: left;
             transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
         }
 
         .quiz-option:hover {
-            background: rgba(0, 255, 136, 0.2);
-            border-color: #00ff88;
-            transform: translateX(5px);
+            background: rgba(255, 0, 255, 0.2);
+            border-color: #ff00ff;
+            transform: translateX(10px);
+            box-shadow: 0 0 25px rgba(255, 0, 255, 0.6);
         }
 
         #level-indicator {
             position: absolute;
-            top: 30px;
-            right: 30px;
-            color: #fff;
-            font-size: 16px;
-            font-weight: 600;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 10px 20px;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            top: 20px;
+            right: 20px;
+            color: #ffff00;
+            font-size: 14px;
+            font-weight: 900;
+            font-family: 'Press Start 2P', cursive;
+            background: rgba(10, 10, 20, 0.95);
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: 3px solid #ffff00;
             text-transform: uppercase;
             letter-spacing: 2px;
+            box-shadow: 0 0 30px rgba(255, 255, 0, 0.6), inset 0 0 15px rgba(255, 255, 0, 0.1);
+            z-index: 100;
         }
 
         #start-screen {
@@ -179,7 +234,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            background: radial-gradient(circle at center, #1a0a2e 0%, #0a0a0a 100%);
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -189,21 +244,25 @@
 
         .btn {
             padding: 20px 40px;
-            font-size: 24px;
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
-            color: #fff;
-            border: none;
-            border-radius: 12px;
+            font-size: 20px;
+            font-family: 'Orbitron', sans-serif;
+            background: rgba(0, 255, 255, 0.1);
+            color: #00ffff;
+            border: 3px solid #00ffff;
+            border-radius: 10px;
             cursor: pointer;
             text-transform: uppercase;
             font-weight: bold;
-            box-shadow: 0 10px 30px rgba(231, 76, 60, 0.4);
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.5), inset 0 0 20px rgba(0, 255, 255, 0.1);
             transition: all 0.3s ease;
         }
 
         .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 40px rgba(231, 76, 60, 0.6);
+            background: rgba(255, 0, 255, 0.2);
+            color: #ff00ff;
+            border-color: #ff00ff;
+            transform: translateY(-5px);
+            box-shadow: 0 0 60px rgba(255, 0, 255, 0.8), inset 0 0 30px rgba(255, 0, 255, 0.2);
         }
 
         /* Pause Menu Modal */
@@ -345,6 +404,9 @@
         </div>
     </div>
 
+    <!-- Minimap -->
+    <canvas id="minimap"></canvas>
+
     <div id="level-indicator">LEVEL 1</div>
 
     <!-- Quiz Modal -->
@@ -359,13 +421,15 @@
     <!-- Start Screen -->
     <div id="start-screen">
         <h1
-            style="color: #e74c3c; font-size: 60px; text-shadow: 0 0 30px rgba(231, 76, 60, 0.6); margin-bottom: 10px; font-weight: 900;">
+            style="color: #00ffff; font-family: 'Press Start 2P', cursive; font-size: 48px; text-shadow: 0 0 40px rgba(0, 255, 255, 0.8), 0 0 80px rgba(0, 255, 255, 0.4); margin-bottom: 20px; letter-spacing: 3px;">
             ARCH-DOOM</h1>
-        <p style="color: rgba(255, 255, 255, 0.7); margin-bottom: 40px; font-size: 18px; letter-spacing: 1px;">
-            Enterprise Architecture Knowledge Test</p>
+        <p
+            style="color: #ff00ff; font-family: 'Orbitron', sans-serif; margin-bottom: 50px; font-size: 16px; letter-spacing: 3px; text-shadow: 0 0 20px rgba(255, 0, 255, 0.6);">
+            ENTERPRISE ARCHITECTURE CHALLENGE</p>
         <button class="btn" id="start-btn">START GAME</button>
-        <p style="color: rgba(255, 255, 255, 0.4); margin-top: 20px; font-size: 14px;">Use WASD to Move, CLICK to Shoot,
-            MOUSE to Look.</p>
+        <p
+            style="color: rgba(255, 255, 0, 0.6); margin-top: 30px; font-size: 12px; font-family: 'Orbitron', sans-serif; letter-spacing: 1px;">
+            WASD = MOVE | MOUSE = LOOK | ESC = PAUSE</p>
     </div>
 
     <!-- Pause Menu -->
