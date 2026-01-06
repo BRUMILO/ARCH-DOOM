@@ -590,16 +590,146 @@
     <!-- Start Screen -->
     <div id="start-screen">
         <h1
-            style="color: #00ffff; font-family: 'Press Start 2P', cursive; font-size: 48px; text-shadow: 0 0 40px rgba(0, 255, 255, 0.8), 0 0 80px rgba(0, 255, 255, 0.4); margin-bottom: 20px; letter-spacing: 3px;">
+            style="color: #00ffff; font-family: 'Press Start 2P', cursive; font-size: 56px; text-shadow: 0 0 40px rgba(0, 255, 255, 0.8), 0 0 80px rgba(0, 255, 255, 0.4); margin-bottom: 10px; letter-spacing: 3px;">
             ARCH-DOOM</h1>
         <p
-            style="color: #ff00ff; font-family: 'Orbitron', sans-serif; margin-bottom: 50px; font-size: 16px; letter-spacing: 3px; text-shadow: 0 0 20px rgba(255, 0, 255, 0.6);">
-            ENTERPRISE ARCHITECTURE CHALLENGE</p>
-        <button class="btn" id="start-btn">START GAME</button>
-        <p
-            style="color: rgba(255, 255, 0, 0.6); margin-top: 30px; font-size: 12px; font-family: 'Orbitron', sans-serif; letter-spacing: 1px;">
-            WASD = MOVE | MOUSE = LOOK | ESC = PAUSE</p>
+            style="color: #ff00ff; font-family: 'Orbitron', sans-serif; margin-bottom: 40px; font-size: 18px; letter-spacing: 4px; text-shadow: 0 0 20px rgba(255, 0, 255, 0.6); text-transform: uppercase;">
+            DESAFÍO DE ARQUITECTURA EMPRESARIAL</p>
+
+        <div class="arcade-tabs">
+            <button class="tab-btn active" onclick="switchTab('mission')">MISIÓN</button>
+            <button class="tab-btn" onclick="switchTab('controls')">CONTROLES</button>
+            <button class="tab-btn" onclick="switchTab('rules')">REGLAS</button>
+        </div>
+
+        <div id="mission" class="tab-pane active">
+            <h3 class="tab-header">⚡ OBJETIVO CRÍTICO</h3>
+            <p>La red neuronal está comprometida. Tu misión es infiltrarte en el sistema y recuperar los <span
+                    style="color: #ffff00;">Holocrones de Datos</span>.</p>
+            <p>Ten cuidado: los sistemas de seguridad defensivos intentarán detenerte. Usa tu conocimiento para
+                desbloquear los cortafuegos.</p>
+        </div>
+
+        <div id="controls" class="tab-pane">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; text-align: left;">
+                <div>
+                    <div style="color: #00ffff; margin-bottom: 5px;">MOVIMIENTO</div>
+                    <div style="font-size: 14px; color: #fff;">[W, A, S, D]</div>
+                </div>
+                <div>
+                    <div style="color: #ff00ff; margin-bottom: 5px;">CÁMARA</div>
+                    <div style="font-size: 14px; color: #fff;">[MOUSE]</div>
+                </div>
+                <div>
+                    <div style="color: #ffff00; margin-bottom: 5px;">ACCIÓN</div>
+                    <div style="font-size: 14px; color: #fff;">[CLIC IZQ] Disparar</div>
+                </div>
+                <div>
+                    <div style="color: #00ff00; margin-bottom: 5px;">SISTEMA</div>
+                    <div style="font-size: 14px; color: #fff;">[ESC] Pausa</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="rules" class="tab-pane">
+            <ul style="text-align: left; list-style: none; padding: 0;">
+                <li style="margin-bottom: 15px;">
+                    <span style="color: #ffff00;">►</span> Busca los <span style="color: #00ffff;">Cubos de Datos</span>
+                    (Triggers).
+                </li>
+                <li style="margin-bottom: 15px;">
+                    <span style="color: #ffff00;">►</span> Responde correctamente las preguntas para desactivar los
+                    bloqueos.
+                </li>
+                <li>
+                    <span style="color: #ffff00;">►</span> Elimina las amenazas para despejar el sector.
+                </li>
+            </ul>
+        </div>
+
+        <button class="btn" id="start-btn" style="margin-top: 30px;">INICIAR JUEGO</button>
     </div>
+
+    <script>
+        function switchTab(tabId) {
+            // Hide all panes
+            document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+            // Deactivate all buttons
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+            // Activate selected
+            document.getElementById(tabId).classList.add('active');
+            // Highlight button (simple logic to find button by text or order would be better, but we can iterate)
+            event.target.classList.add('active');
+        }
+    </script>
+
+    <style>
+        /* Tab System Styles */
+        .arcade-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 0;
+            z-index: 10;
+        }
+
+        .tab-btn {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #333;
+            border-bottom: none;
+            color: #888;
+            padding: 10px 20px;
+            font-family: 'Press Start 2P';
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 10px 10px 0 0;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            background: rgba(0, 255, 255, 0.1);
+            border-color: #00ffff;
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff;
+            transform: translateY(2px);
+            /* Connect with box */
+        }
+
+        .tab-btn:hover:not(.active) {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-pane {
+            display: none;
+            background: rgba(0, 255, 255, 0.05);
+            border: 2px solid #00ffff;
+            border-radius: 0 10px 10px 10px;
+            /* Top left square to match active tab */
+            padding: 30px;
+            width: 600px;
+            min-height: 200px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.1);
+            animation: fadeIn 0.3s ease;
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        .tab-header {
+            color: #ff00ff;
+            font-family: 'Press Start 2P';
+            font-size: 14px;
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #ff00ff;
+        }
+    </style>
 
     <!-- Pause Menu -->
     <div id="pause-menu">
