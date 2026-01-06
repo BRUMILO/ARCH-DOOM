@@ -93,9 +93,14 @@ export class Weapon {
         // Make it face the camera
         this.muzzleFlash.lookAt(camera.position);
 
+        // Update flash color to Cyan
+        if (this.muzzleFlash.material) {
+            this.muzzleFlash.material.color.setHex(0x00ffff);
+        }
+
         // Show flash
         this.muzzleFlash.visible = true;
-        this.muzzleFlash.material.opacity = 0.8;
+        this.muzzleFlash.material.opacity = 1;
         this.scene.add(this.muzzleFlash);
 
         // Fade out quickly
@@ -108,37 +113,96 @@ export class Weapon {
     }
 
     showTracer(start, end) {
-        // Offset start slightly below camera (like holding a gun)
-        const startPos = start.clone();
+        // Calculate length and direction
+        const distance = start.distanceTo(end);
+        const direction = new THREE.Vector3().subVectors(end, start).normalize();
 
-        // Slightly lower than eye level
-        startPos.y -= 0.2;
+        // Create Cylinder Beam
+        const geometry = new THREE.CylinderGeometry(0.05, 0.05, distance, 6);
+        geometry.rotateX(-Math.PI / 2); // Align with Z axis
 
-        // Create line geometry for bullet tracer
-        const points = [startPos, end.clone()];
-        const geometry = new THREE.BufferGeometry().setFromPoints(points);
-
-        const material = new THREE.LineBasicMaterial({
-            color: 0x00ffff, // Cyan tracer
-            linewidth: 3,
+        const material = new THREE.MeshBasicMaterial({
+            color: 0x00ffff, // Cyan laser
             transparent: true,
-            opacity: 0.8
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending
         });
 
-        const tracer = new THREE.Line(geometry, material);
-        this.scene.add(tracer);
+        const beam = new THREE.Mesh(geometry, material);
 
-        // Remove tracer after short duration
+        // Position beam at midpoint
+        const midpoint = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+        beam.position.copy(midpoint);
+        beam.lookAt(end);
+
+        // Offset slightly down (weapon height)
+        beam.position.y -= 0.1;
+
+        this.scene.add(beam);
+
+        // Remove beam after short duration
         setTimeout(() => {
-            this.scene.remove(tracer);
+            this.scene.remove(beam);
             geometry.dispose();
             material.dispose();
-        }, 100);
+        }, 80);
+
+        // Create impact particles at end point
+        this.createImpactParticles(end);
+    }
+
+    createImpactParticles(position) {
+        const particleCount = 12;
+        const geometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+        const material = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+
+        const particles = [];
+
+        for (let i = 0; i < particleCount; i++) {
+            const particle = new THREE.Mesh(geometry, material);
+            particle.position.copy(position);
+
+            // Random velocity
+            const velocity = new THREE.Vector3(
+                (Math.random() - 0.5) * 4,
+                (Math.random() - 0.5) * 4,
+                (Math.random() - 0.5) * 4
+            );
+
+            particle.userData = { velocity: velocity };
+            this.scene.add(particle);
+            particles.push(particle);
+        }
+
+        // Animate particles
+        const animateParticles = () => {
+            let active = false;
+            particles.forEach(p => {
+                if (p.visible) {
+                    p.position.add(p.userData.velocity.multiplyScalar(0.1)); // Slow down simulation step
+                    p.scale.multiplyScalar(0.9); // Shrink
+                    if (p.scale.x < 0.01) {
+                        p.visible = false;
+                        this.scene.remove(p);
+                    } else {
+                        active = true;
+                    }
+                }
+            });
+
+            if (active) {
+                requestAnimationFrame(animateParticles);
+            } else {
+                geometry.dispose();
+                material.dispose();
+            }
+        };
+
+        animateParticles();
     }
 
     showHitEffect(enemy) {
         // Flash the enemy core white briefly
-        // Note: enemy.mesh is a Group, so we flash enemy.core if it exists, otherwise fallback
         const targetMesh = enemy.core || enemy.mesh;
 
         if (targetMesh.material) {
@@ -152,7 +216,8 @@ export class Weapon {
             }, 100);
         }
 
-        // Create impact particles/flash at hit point
+        // Impact particles are already handled by showTracer's call to createImpactParticles
+        // But we add a light flash here specifically for enemy hits
         const impactFlash = new THREE.PointLight(0xff0000, 2, 3);
         impactFlash.position.copy(enemy.mesh.position);
         this.scene.add(impactFlash);
