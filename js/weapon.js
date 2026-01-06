@@ -11,13 +11,9 @@ export class Weapon {
 
         // Weapon Model Container
         this.weaponGroup = new THREE.Group();
-        this.camera.add(this.weaponGroup); // Attach to camera so it follows view
-
-        // Muzzle position helper (will be attached to weapon model)
+        this.camera.add(this.weaponGroup);
         this.muzzleOffset = new THREE.Object3D();
-
         this.createWeaponModel();
-
         this.muzzleFlash = null;
         this.createMuzzleFlash();
     }
@@ -33,13 +29,13 @@ export class Weapon {
 
         // 2. Barrel Logic (Energy Core)
         const barrelGeo = new THREE.BoxGeometry(0.06, 0.06, 0.5);
-        const barrelMat = new THREE.MeshBasicMaterial({ color: 0x00ffff }); // Cyan Core
+        const barrelMat = new THREE.MeshBasicMaterial({ color: 0x00ffff });
         const barrel = new THREE.Mesh(barrelGeo, barrelMat);
         barrel.position.set(0, 0.02, -0.15);
 
         // 3. Barrel Shroud (Top/Bottom Plates)
         const shroudGeo = new THREE.BoxGeometry(0.1, 0.02, 0.35);
-        const shroudMat = new THREE.MeshBasicMaterial({ color: 0x4a4a55 }); // Lighter Grey
+        const shroudMat = new THREE.MeshBasicMaterial({ color: 0x4a4a55 });
 
         const topShroud = new THREE.Mesh(shroudGeo, shroudMat);
         topShroud.position.set(0, 0.08, -0.1);
@@ -49,13 +45,13 @@ export class Weapon {
 
         // 4. Rear Grip/Handle
         const gripGeo = new THREE.BoxGeometry(0.08, 0.15, 0.12);
-        const gripMat = new THREE.MeshBasicMaterial({ color: 0x1a1a22 }); // Dark handle
+        const gripMat = new THREE.MeshBasicMaterial({ color: 0x1a1a22 });
         const grip = new THREE.Mesh(gripGeo, gripMat);
         grip.position.set(0, -0.1, 0.15);
 
         // 5. Side Vents (Glowing)
         const ventGeo = new THREE.BoxGeometry(0.13, 0.04, 0.2);
-        const ventMat = new THREE.MeshBasicMaterial({ color: 0xff00ff }); // Magenta Accents
+        const ventMat = new THREE.MeshBasicMaterial({ color: 0xff00ff });
         const vents = new THREE.Mesh(ventGeo, ventMat);
         vents.position.set(0, 0, 0.05);
 
@@ -84,7 +80,7 @@ export class Weapon {
 
     createMuzzleFlash() {
         // Muzzle Flash is now attached to the weapon/muzzle
-        const geometry = new THREE.PlaneGeometry(0.15, 0.15); // Reduced from 0.4
+        const geometry = new THREE.PlaneGeometry(0.15, 0.15);
         const material = new THREE.MeshBasicMaterial({
             color: 0x00ffff,
             transparent: true,
@@ -109,7 +105,7 @@ export class Weapon {
 
         this.lastShot = performance.now() / 1000;
 
-        // --- 1. LOGICAL HIT DETECTION (From Camera Center/Crosshair) ---
+        // --- 1. LOGICAL HIT DETECTION  ---
         const direction = new THREE.Vector3();
         camera.getWorldDirection(direction);
 
@@ -197,7 +193,7 @@ export class Weapon {
         this.muzzleFlash.rotation.z = Math.random() * Math.PI;
 
         this.muzzleFlash.visible = true;
-        this.muzzleFlash.material.opacity = 0.6; // Reduced from 1.0
+        this.muzzleFlash.material.opacity = 0.6;
 
         setTimeout(() => {
             if (this.muzzleFlash) {
@@ -212,7 +208,7 @@ export class Weapon {
 
         // Create Cylinder Beam
         const geometry = new THREE.CylinderGeometry(0.02, 0.02, distance, 6);
-        geometry.rotateX(-Math.PI / 2); // Rotate to align with LookAt
+        geometry.rotateX(-Math.PI / 2);
 
         const material = new THREE.MeshBasicMaterial({
             color: 0x00ffff,

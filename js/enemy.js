@@ -71,16 +71,16 @@ export class Enemy {
     }
 
     spawnAtValidPosition() {
+        // Trust the grid map first
         const map = this.level.maps[this.level.currentLevelIndex];
         if (!map) return;
 
         const validPositions = [];
+        const floorY = 0.8;
 
-        // Find empty cells (0 or 9)
         for (let z = 0; z < map.length; z++) {
             for (let x = 0; x < map[z].length; x++) {
-                const type = map[z][x];
-                if (type === 0) { // Empty space
+                if (map[z][x] === 0) { // Empty space
                     validPositions.push({
                         x: x * this.level.cellSize - 20,
                         z: z * this.level.cellSize - 20
@@ -89,23 +89,31 @@ export class Enemy {
             }
         }
 
-        // Pick random valid position
         if (validPositions.length > 0) {
+            // Pick random valid position
             const pos = validPositions[Math.floor(Math.random() * validPositions.length)];
-            this.mesh.position.set(pos.x, 0.8, pos.z);
+
+            // Add slight random offset to prevent stacking, but keep within cell safe zone
+            // Cell is 4x4. Safe radius ~1.5. Random +/- 1.0 is safe.
+            const offsetX = (Math.random() - 0.5) * 2.0;
+            const offsetZ = (Math.random() - 0.5) * 2.0;
+
+            this.mesh.position.set(pos.x + offsetX, floorY, pos.z + offsetZ);
         } else {
-            // Fallback
-            this.mesh.position.set(0, 0.8, 5);
+            this.mesh.position.set(0, floorY, 5);
         }
     }
 
     update(delta, playerPos) {
         if (this.isDead()) return;
 
+        // Active Wall Separation: Push out if inside wall
+        this.resolveWallCollisions();
+
         // Animate drone: float and rotate ring
         this.ring.rotation.x += 2 * delta;
         this.ring.rotation.y += 2 * delta;
-        this.mesh.position.y = 0.8 + Math.sin(performance.now() / 500) * 0.1; // Bobbing effect
+        this.mesh.position.y = 0.8 + Math.sin(performance.now() / 500) * 0.1;
 
         const distanceToPlayer = this.mesh.position.distanceTo(playerPos);
 
@@ -119,6 +127,45 @@ export class Enemy {
         }
     }
 
+    resolveWallCollisions() {
+        const radius = 0.7; // Enemy physical radius
+        const walls = this.level.walls;
+        const wallHalfSize = 2.0; // Walls are 4x4, so half is 2.0
+
+        for (const wallGroup of walls) {
+            const wx = wallGroup.position.x;
+            const wz = wallGroup.position.z;
+            const ex = this.mesh.position.x;
+            const ez = this.mesh.position.z;
+
+            const clampedX = Math.max(wx - wallHalfSize, Math.min(wx + wallHalfSize, ex));
+            const clampedZ = Math.max(wz - wallHalfSize, Math.min(wz + wallHalfSize, ez));
+
+            const dx = ex - clampedX;
+            const dz = ez - clampedZ;
+            const distSq = dx * dx + dz * dz;
+
+            if (distSq < radius * radius && distSq > 0.0001) {
+                const dist = Math.sqrt(distSq);
+                const overlap = radius - dist;
+                this.mesh.position.x += (dx / dist) * overlap;
+                this.mesh.position.z += (dz / dist) * overlap;
+            } else if (distSq < 0.0001) {
+                // Inside wall logic
+                const distLeft = ex - (wx - wallHalfSize);
+                const distRight = (wx + wallHalfSize) - ex;
+                const distTop = ez - (wz - wallHalfSize);
+                const distBottom = (wz + wallHalfSize) - ez;
+                const min = Math.min(distLeft, distRight, distTop, distBottom);
+
+                if (min === distLeft) this.mesh.position.x -= (min + 0.1);
+                else if (min === distRight) this.mesh.position.x += (min + 0.1);
+                else if (min === distTop) this.mesh.position.z -= (min + 0.1);
+                else if (min === distBottom) this.mesh.position.z += (min + 0.1);
+            }
+        }
+    }
+
     chasePlayer(delta, playerPos) {
         // Move towards player
         const direction = new THREE.Vector3();
@@ -126,23 +173,38 @@ export class Enemy {
         direction.y = 0; // Keep on ground
         direction.normalize();
 
-        // Check if path is clear before moving
+        // --- ENHANCED COLLISION DETECTION (Whiskers) ---
+        const moveDistance = this.speed * delta;
+        const collisionThreshold = 1.0;
+
+        // 1. Center Ray
+        if (this.checkCollision(direction, collisionThreshold)) {
+            // Try sliding
+            const leftDir = direction.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 4);
+            const rightDir = direction.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), -Math.PI / 4);
+
+            if (!this.checkCollision(leftDir, collisionThreshold)) {
+                this.mesh.position.addScaledVector(leftDir, moveDistance);
+                return;
+            } else if (!this.checkCollision(rightDir, collisionThreshold)) {
+                this.mesh.position.addScaledVector(rightDir, moveDistance);
+                return;
+            }
+            return;
+        }
+
+        // Safe to move
+        this.mesh.position.addScaledVector(direction, moveDistance);
+    }
+
+    checkCollision(direction, distance) {
         this.raycaster.set(this.mesh.position, direction);
-        this.raycaster.far = this.speed * delta + 0.5;
+        this.raycaster.far = distance;
 
         const walls = this.level.walls;
-        // ENABLE RECURSIVE for Groups
         const intersects = this.raycaster.intersectObjects(walls, true);
 
-        // Filter out LineSegments (edges) if they block movement unexpectedly,
-        // but usually just recursive is enough.
-        // Let's filter to be safe like player.js
-        const hitWall = intersects.find(i => i.object.type === 'Mesh' && i.distance < this.speed * delta + 0.5);
-
-        // Only move if no wall in the way
-        if (!hitWall) {
-            this.mesh.position.addScaledVector(direction, this.speed * delta);
-        }
+        return intersects.some(i => i.object.type === 'Mesh' && i.distance < distance);
     }
 
     patrol(delta) {
@@ -203,11 +265,10 @@ export class Enemy {
     }
 
     die() {
-        // Change color to indicate death
         this.core.material.color.setHex(0x444444);
         this.core.material.transparent = true;
         this.core.material.opacity = 0.3;
-        this.ring.visible = false; // Hide ring on death
+        this.ring.visible = false;
     }
 
     canAttack() {
