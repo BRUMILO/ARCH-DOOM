@@ -1,0 +1,15 @@
+/* Basic reset and styles - most UI is inlined in HTML for simplicity but can be moved here */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    overflow: hidden;
+    background-color: #000;
+}
+
+#game-container {
+    width: 100vw;
+    height: 100vh;
+}
