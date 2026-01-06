@@ -4,7 +4,7 @@ export const questions = [
         level: 1,
         question: "Objetivo principal de la Arquitectura Empresarial:",
         options: ["Ahorrar costos", "Alinear Negocio y TI", "Crear redes", "Gestionar proyectos"],
-        answer: 1 // Index of correct answer
+        answer: 1
     },
     {
         level: 1,

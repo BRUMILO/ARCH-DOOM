@@ -25,13 +25,13 @@ export class Level {
             ],
             2: [
                 [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                [1, 9, 0, 2, 2, 0, 1, 0, 0, 0, 2, 0, 0, 1], // Added one '2'
+                [1, 9, 0, 2, 2, 0, 1, 0, 0, 0, 2, 0, 0, 1],
                 [1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1],
                 [1, 2, 0, 0, 1, 0, 0, 0, 0, 0, 0, 2, 0, 1],
                 [1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1],
                 [1, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 1, 2, 1],
                 [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1],
-                [1, 2, 0, 0, 0, 0, 0, 2, 0, 0, 0, 2, 0, 1], // Added one '2'
+                [1, 2, 0, 0, 0, 0, 0, 2, 0, 0, 0, 2, 0, 1],
                 [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
             ],
             3: [
@@ -41,7 +41,7 @@ export class Level {
                 [1, 0, 1, 2, 0, 0, 0, 0, 2, 1, 0, 1],
                 [1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1],
                 [1, 2, 0, 0, 1, 2, 0, 1, 0, 0, 0, 1],
-                [1, 1, 1, 0, 1, 2, 0, 1, 0, 1, 2, 1], // Added one '2'
+                [1, 1, 1, 0, 1, 2, 0, 1, 0, 1, 2, 1],
                 [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
                 [1, 2, 1, 1, 1, 1, 1, 1, 2, 1, 0, 1],
                 [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
@@ -54,29 +54,24 @@ export class Level {
     }
 
     initBase() {
-        // Add Fog for depth and to hide edges
         this.scene.fog = new THREE.FogExp2(0x050510, 0.02);
         this.scene.background = new THREE.Color(0x050510);
 
-        // Infinite Grid Floor
         const gridHelper = new THREE.GridHelper(200, 50, 0x222222, 0x111111);
         this.scene.add(gridHelper);
 
-        // Reflective dark floor plane below grid to block void
         const floorGeometry = new THREE.PlaneGeometry(200, 200);
         const floorMaterial = new THREE.MeshBasicMaterial({ color: 0x020205 });
         const floor = new THREE.Mesh(floorGeometry, floorMaterial);
         floor.rotation.x = -Math.PI / 2;
-        floor.position.y = -0.1; // Slightly below grid
+        floor.position.y = -0.1;
         this.scene.add(floor);
 
-        // No ceiling needed, sky/void is better for cyber aesthetic
     }
 
     loadLevel(index) {
         this.currentLevelIndex = index;
 
-        // Cleanup old level
         this.walls.forEach(w => {
             this.scene.remove(w);
             if (w.geometry) w.geometry.dispose();
@@ -99,8 +94,8 @@ export class Level {
         // Wall Materials
         const wallGeometry = new THREE.BoxGeometry(this.cellSize, 4, this.cellSize);
         const wallMaterial = new THREE.MeshBasicMaterial({
-            color: 0x000000, // Black inner wall
-            transparent: true,
+            color: 0x000000,
+            transparent: false,
             opacity: 0.9
         });
 
@@ -117,7 +112,6 @@ export class Level {
         for (let z = 0; z < map.length; z++) {
             for (let x = 0; x < map[z].length; x++) {
                 const type = map[z][x];
-                // 1 = Wall
                 if (type === 1) {
                     // Create Container for wall + edges
                     const wallGroup = new THREE.Group();
@@ -152,7 +146,6 @@ export class Level {
                     triggerGroup.add(core);
 
                     // Point Light
-                    // Use a slightly dimmer light to avoid blinding bloom
                     const light = new THREE.PointLight(neonColor, 0.8, 3);
                     triggerGroup.add(light);
 
@@ -175,7 +168,7 @@ export class Level {
         const time = performance.now() / 1000;
         this.questions.forEach(q => {
             if (q.userData.active) {
-                // Complex rotation
+                // Rotation
                 if (q.userData.shell) {
                     q.userData.shell.rotation.y += delta;
                     q.userData.shell.rotation.z += delta * 0.5;

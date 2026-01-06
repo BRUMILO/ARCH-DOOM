@@ -14,7 +14,7 @@ export class Enemy {
         this.detectionRange = 10;
         this.attackRange = 1.5;
         this.attackDamage = 10;
-        this.attackCooldown = 2.0; // Seconds
+        this.attackCooldown = 2.0;
         this.lastAttack = 0;
 
         // AI state

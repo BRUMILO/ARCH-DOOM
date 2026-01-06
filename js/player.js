@@ -14,7 +14,7 @@ export class Player {
         this.moveLeft = false;
         this.moveRight = false;
 
-        this.speed = 1.5; // Movement speed (Effective now)
+        this.speed = 1.5;
         this.mouseSensitivity = parseFloat(localStorage.getItem('mouseSensitivity')) || 0.002;
 
         // Health and Shield
@@ -25,17 +25,15 @@ export class Player {
 
         // Raycaster for collision detection
         this.raycaster = new THREE.Raycaster();
-        this.collisionDistance = 0.5; // Minimum distance from walls
+        this.collisionDistance = 0.5;
 
         this.setupControls();
         this.setupEventListeners();
     }
 
     setupControls() {
-        // Apply mouse sensitivity
         this.controls.pointerSpeed = this.mouseSensitivity;
 
-        // Start game on click
         const startBtn = document.getElementById('start-btn');
         startBtn.addEventListener('click', () => {
             this.controls.lock();
@@ -43,9 +41,6 @@ export class Player {
         });
 
         this.controls.addEventListener('unlock', () => {
-            // Pause logic could go here
-            // If strictly just gameplay, maybe show start screen again or pause menu
-            // For now, we leave it simple.
         });
     }
 
@@ -98,22 +93,16 @@ export class Player {
 
     update(delta, collisionObjects = []) {
         if (this.controls.isLocked === true) {
-            // Cap delta to prevent instability on frame drops
             const timeStep = Math.min(delta, 0.1);
 
-            // Stable friction (exponential decay)
-            // velocity * e^(-damping * dt)
-            // 10.0 damping factor
             const friction = Math.exp(-10.0 * timeStep);
             this.velocity.x *= friction;
             this.velocity.z *= friction;
 
             this.direction.z = Number(this.moveForward) - Number(this.moveBackward);
             this.direction.x = Number(this.moveRight) - Number(this.moveLeft);
-            this.direction.normalize(); // Ensure consistent speed in all directions
+            this.direction.normalize();
 
-            // Acceleration: speed * 50.0 gives good response with 10.0 damping
-            // Previously hardcoded 400.0 was equivalent to speed 8.0
             const acceleration = this.speed * 50.0;
 
             if (this.moveForward || this.moveBackward || this.moveLeft || this.moveRight) {
@@ -121,15 +110,12 @@ export class Player {
                 this.velocity.x -= this.direction.x * acceleration * timeStep;
             }
 
-            // Calculate intended movement
             const moveX = -this.velocity.x * timeStep;
             const moveZ = -this.velocity.z * timeStep;
 
-            // Check collisions before moving
             const canMoveX = this.checkCollision(collisionObjects, moveX, 0);
             const canMoveZ = this.checkCollision(collisionObjects, 0, moveZ);
 
-            // Apply movement only if no collision detected
             if (canMoveX) {
                 this.controls.moveRight(moveX);
             }
@@ -137,7 +123,6 @@ export class Player {
                 this.controls.moveForward(moveZ);
             }
 
-            // Simple Floor Collision
             if (this.camera.position.y < 1.6) {
                 this.camera.position.y = 1.6;
                 this.velocity.y = 0;
@@ -161,39 +146,29 @@ export class Player {
         forward.y = 0;
         forward.normalize();
 
-        // Calculate the actual movement vector
         const movementVector = new THREE.Vector3();
         movementVector.addScaledVector(right, moveX);
         movementVector.addScaledVector(forward, moveZ);
 
-        // If no movement, allow it
         if (movementVector.length() < 0.001) return true;
 
         movementVector.normalize();
-
-        // Cast ray from camera position in movement direction
         this.raycaster.set(this.camera.position, movementVector);
 
-        // Recursive necessary for Groups (Tron walls)
         const intersects = this.raycaster.intersectObjects(collisionObjects, true);
 
-        // Check intersections
         for (let i = 0; i < intersects.length; i++) {
             const hit = intersects[i];
 
-            // Ignore LineSegments (edges) and Triggers (if any ended up in list)
-            // Only collide with solid Wall Meshes
             if (hit.object.type === 'LineSegments') continue;
             if (hit.object.userData && hit.object.userData.isTrigger) continue;
 
             if (hit.distance < this.collisionDistance) {
-                return false; // Collision detected with solid wall
+                return false;
             }
         }
 
-        return true; // No collision, allow movement
-
-        return true; // No collision, allow movement
+        return true;
     }
 
     setMouseSensitivity(value) {
@@ -206,7 +181,6 @@ export class Player {
         if (this.shield > 0) {
             this.shield -= amount;
             if (this.shield < 0) {
-                // Overflow damage to health
                 this.health += this.shield;
                 this.shield = 0;
             }
@@ -223,10 +197,9 @@ export class Player {
             overlay.style.opacity = '1';
             setTimeout(() => {
                 overlay.style.opacity = '0';
-            }, 400); // Longer duration
+            }, 400);
         }
 
-        // Trigger Screen Shake
         document.body.classList.add('shake-effect');
         setTimeout(() => {
             document.body.classList.remove('shake-effect');
@@ -251,10 +224,7 @@ export class Player {
     }
 
     die() {
-        // Unlock cursor so user can click
         this.controls.unlock();
-
-        // Show arcade game over modal
         const modal = document.getElementById('game-over-modal');
         modal.classList.add('show');
     }

@@ -11,7 +11,7 @@ const engine = new Engine();
 const player = new Player(engine.camera, engine.renderer.domElement);
 const level = new Level(engine.scene);
 const minimap = new Minimap('minimap');
-const weapon = new Weapon(engine.scene);
+const weapon = new Weapon(engine.scene, engine.camera);
 const enemies = [];
 
 const quizManager = new QuizManager(player.controls, player, () => {
@@ -19,10 +19,8 @@ const quizManager = new QuizManager(player.controls, player, () => {
     console.log("Level Complete!");
     const nextLevel = level.currentLevelIndex + 1;
     if (nextLevel <= 3) {
-        // Show level complete modal
         showLevelCompleteModal(level.currentLevelIndex, nextLevel);
     } else {
-        // Show victory modal
         showVictoryModal();
     }
 });
@@ -45,7 +43,7 @@ function animate() {
         level.questions.forEach(trigger => {
             if (trigger.userData.active) {
                 const dist = player.camera.position.distanceTo(trigger.position);
-                if (dist < 3.0) { // Distance to interact
+                if (dist < 3.0) {
                     quizManager.triggerQuiz(trigger, level.currentLevelIndex);
                 }
             }
@@ -66,11 +64,8 @@ function animate() {
         engine.render();
 
         // Update minimap
-        // Update minimap with STABLE rotation (Vector-based)
         const forward = new THREE.Vector3();
         player.camera.getWorldDirection(forward);
-        // atan2(x, z) gives angle relative to North (Z axis)
-        // This is much more stable than Euler angles during fast movement
         const playerAngle = Math.atan2(forward.x, forward.z);
 
         minimap.update(player.camera.position, playerAngle, level, enemies);
@@ -79,11 +74,9 @@ function animate() {
 
 // Spawn enemies function
 function spawnEnemies(count) {
-    // Remove old enemies
     enemies.forEach(e => engine.scene.remove(e.mesh));
     enemies.length = 0;
 
-    // Spawn new ones
     for (let i = 0; i < count; i++) {
         const enemy = new Enemy(engine.scene, level);
         enemies.push(enemy);
@@ -96,7 +89,6 @@ document.addEventListener('click', () => {
         const hit = weapon.shoot(engine.camera, enemies, level.walls);
 
         if (hit && hit.enemy.isDead()) {
-            // Remove dead enemy after a short delay
             setTimeout(() => {
                 engine.scene.remove(hit.enemy.mesh);
                 const index = enemies.indexOf(hit.enemy);
@@ -120,12 +112,10 @@ const resumeBtn = document.getElementById('resume-btn');
 const menuBtn = document.getElementById('menu-btn');
 const sensitivitySlider = document.getElementById('sensitivity-slider');
 const sensitivityValue = document.getElementById('sensitivity-value');
-const quizOverlay = document.getElementById('quiz-overlay'); // To check if quiz is active
+const quizOverlay = document.getElementById('quiz-overlay');
 
 let isPaused = false;
 
-// Convert sensitivity to slider value (0.001-0.02 range to 1-100)
-// New range: 0.001 (min) to 0.5 (max) - Ultra High Sensitivity
 const minSens = 0.001;
 const maxSens = 0.5;
 const rangeSens = maxSens - minSens;
@@ -146,16 +136,12 @@ function showPauseMenu() {
 }
 
 // Hide pause menu and resume game
-// Hide pause menu and resume game
 function hidePauseMenu() {
-    // Only attempt to lock. The 'lock' event listener will handle hiding the menu.
-    // This prevents the menu from disappearing if the lock request fails.
     player.controls.lock();
 }
 
 // DETECT POINTER UNLOCK (Pressed ESC or lost focus)
 player.controls.addEventListener('unlock', () => {
-    // Only show pause menu if no other overlay is active
     const quizActive = quizOverlay.style.display === 'flex';
     const gameOverActive = document.getElementById('game-over-modal').classList.contains('show');
     const levelCompleteActive = document.getElementById('level-complete-modal').classList.contains('show');
@@ -173,7 +159,6 @@ player.controls.addEventListener('lock', () => {
 });
 
 // Handle ESC key - only needed to close menu if already open
-// The 'unlock' event handles opening the menu naturally
 document.addEventListener('keydown', (e) => {
     if (e.code === 'Escape') {
         if (isPaused) {
@@ -189,7 +174,7 @@ resumeBtn.addEventListener('click', () => {
 
 // Return to menu button
 menuBtn.addEventListener('click', () => {
-    location.reload(); // Reload page to go back to start screen
+    location.reload();
 });
 
 // Update sensitivity
@@ -217,7 +202,6 @@ function showLevelCompleteModal(currentLevel, nextLevel) {
     // Setup next level button
     const nextBtn = document.getElementById('next-level-btn');
     nextBtn.onclick = () => {
-        // Re-lock controls immediately (requires user gesture, which click is)
         player.controls.lock();
 
         modal.classList.remove('show');
@@ -226,7 +210,7 @@ function showLevelCompleteModal(currentLevel, nextLevel) {
         level.loadLevel(nextLevel);
         document.getElementById('level-indicator').textContent = "LEVEL " + nextLevel;
         quizManager.resetLevel(level.questions.length);
-        spawnEnemies(10 + (nextLevel * 3)); // 13, 16 enemies for next levels
+        spawnEnemies(10 + (nextLevel * 3));
         engine.camera.position.set(0, 1.6, 0);
 
         // Reset player health/shield
@@ -245,6 +229,6 @@ function showVictoryModal() {
         <div style="margin-top: 10px;">ARCHITECT STATUS: ELITE</div>
     `;
 
-    player.controls.unlock(); // Unlock cursor immediately
+    player.controls.unlock();
     modal.classList.add('show');
 }
