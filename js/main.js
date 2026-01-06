@@ -18,7 +18,9 @@ const quizManager = new QuizManager(player.controls, () => {
         alert("LEVEL " + level.currentLevelIndex + " COMPLETE! LOADING LEVEL " + nextLevel);
         level.loadLevel(nextLevel);
         document.getElementById('level-indicator').textContent = "LEVEL " + nextLevel;
-        // Reset player pose if needed
+        // Reset quiz counter for new level with dynamic count from the level object
+        quizManager.resetLevel(level.questions.length);
+        // Reset player position
         engine.camera.position.set(0, 1.6, 0);
     } else {
         alert("CONGRATULATIONS! YOU HAVE COMPLETED THE ENTERPRISE ARCHITECTURE CHALLENGE!");

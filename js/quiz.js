@@ -82,4 +82,11 @@ export class QuizManager {
             }
         }
     }
+
+    // Reset counter and set new requirement
+    resetLevel(requiredCount) {
+        this.correctAnswersInLevel = 0;
+        this.totalRequired = requiredCount || 10;
+        console.log("Level reset. Required: " + this.totalRequired);
+    }
 }
