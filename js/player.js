@@ -92,9 +92,15 @@ export class Player {
 
     update(delta, collisionObjects = []) {
         if (this.controls.isLocked === true) {
+            // Cap delta to prevent instability on frame drops
+            const timeStep = Math.min(delta, 0.1);
 
-            this.velocity.x -= this.velocity.x * 10.0 * delta;
-            this.velocity.z -= this.velocity.z * 10.0 * delta;
+            // Stable friction (exponential decay)
+            // velocity * e^(-damping * dt)
+            // 10.0 damping factor
+            const friction = Math.exp(-10.0 * timeStep);
+            this.velocity.x *= friction;
+            this.velocity.z *= friction;
 
             this.direction.z = Number(this.moveForward) - Number(this.moveBackward);
             this.direction.x = Number(this.moveRight) - Number(this.moveLeft);
@@ -105,13 +111,13 @@ export class Player {
             const acceleration = this.speed * 50.0;
 
             if (this.moveForward || this.moveBackward || this.moveLeft || this.moveRight) {
-                this.velocity.z -= this.direction.z * acceleration * delta;
-                this.velocity.x -= this.direction.x * acceleration * delta;
+                this.velocity.z -= this.direction.z * acceleration * timeStep;
+                this.velocity.x -= this.direction.x * acceleration * timeStep;
             }
 
             // Calculate intended movement
-            const moveX = -this.velocity.x * delta;
-            const moveZ = -this.velocity.z * delta;
+            const moveX = -this.velocity.x * timeStep;
+            const moveZ = -this.velocity.z * timeStep;
 
             // Check collisions before moving
             const canMoveX = this.checkCollision(collisionObjects, moveX, 0);

@@ -141,9 +141,9 @@ export class Minimap {
         this.ctx.lineWidth = 2;
 
         this.ctx.beginPath();
-        this.ctx.moveTo(8, 0);      // Front point
-        this.ctx.lineTo(-6, -5);    // Back left
-        this.ctx.lineTo(-6, 5);     // Back right
+        this.ctx.moveTo(0, -10);     // Front point (Up)
+        this.ctx.lineTo(-6, 7);      // Back left
+        this.ctx.lineTo(6, 7);       // Back right
         this.ctx.closePath();
         this.ctx.fill();
         this.ctx.stroke();
