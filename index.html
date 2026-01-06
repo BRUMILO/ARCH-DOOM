@@ -436,17 +436,18 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.85);
+            /* Slightly clearer to see game blurred behind */
             justify-content: center;
             align-items: center;
             z-index: 400;
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(5px);
         }
 
         #pause-content {
             background: rgba(10, 10, 30, 0.95);
             border: 4px solid #00ffff;
-            box-shadow: 0 0 40px rgba(0, 255, 255, 0.5), inset 0 0 20px rgba(0, 255, 255, 0.2);
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.4), inset 0 0 20px rgba(0, 255, 255, 0.2);
             border-radius: 15px;
             padding: 50px;
             max-width: 500px;
@@ -460,10 +461,10 @@
             margin-top: 0;
             margin-bottom: 40px;
             text-align: center;
-            font-size: 36px;
+            font-size: 40px;
             font-family: 'Press Start 2P', cursive;
-            text-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
-            letter-spacing: 2px;
+            text-shadow: 0 0 30px rgba(0, 255, 255, 0.8);
+            letter-spacing: 4px;
             text-transform: uppercase;
         }
 
@@ -473,42 +474,46 @@
         }
 
         .setting-label {
-            color: #ffff00;
+            color: #ff00ff;
+            /* Magenta subtitle like start screen */
             font-size: 16px;
             margin-bottom: 15px;
             display: flex;
             justify-content: space-between;
             font-family: 'Orbitron', sans-serif;
-            text-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
-            letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
+            letter-spacing: 2px;
         }
 
         .setting-value {
-            color: #ff00ff;
+            color: #ffff00;
             font-weight: bold;
-            text-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
+            text-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
         }
 
         input[type="range"] {
             width: 100%;
             height: 10px;
-            background: #111;
+            background: rgba(0, 255, 255, 0.1);
             border-radius: 5px;
             outline: none;
-            border: 1px solid #333;
+            border: 1px solid #00ffff;
             -webkit-appearance: none;
         }
 
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #00ffff;
+            width: 25px;
+            height: 25px;
+            border-radius: 0;
+            /* Square thumb for arcade feel */
+            background: #ff00ff;
             cursor: pointer;
-            box-shadow: 0 0 15px #00ffff;
+            box-shadow: 0 0 15px #ff00ff;
             border: 2px solid #fff;
+            transform: rotate(45deg);
+            /* Diamond shape */
         }
 
         .pause-buttons {
@@ -517,107 +522,37 @@
             gap: 20px;
         }
 
+        /* Re-use .btn style for pause buttons to match start screen exactly */
         .pause-btn {
-            padding: 15px 30px;
-            border: 3px solid #ff00ff;
-            background: rgba(255, 0, 255, 0.1);
-            color: #ff00ff;
-            font-family: 'Press Start 2P', cursive;
-            font-size: 14px;
+            padding: 20px 30px;
+            font-size: 18px;
+            font-family: 'Orbitron', sans-serif;
+            background: rgba(0, 255, 255, 0.1);
+            color: #00ffff;
+            border: 3px solid #00ffff;
+            border-radius: 10px;
             cursor: pointer;
             text-transform: uppercase;
+            font-weight: bold;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3), inset 0 0 10px rgba(0, 255, 255, 0.1);
             transition: all 0.3s ease;
-            box-shadow: 0 0 15px rgba(255, 0, 255, 0.3);
-            text-align: center;
+            width: 100%;
         }
 
         .pause-btn:hover {
-            background: #ff00ff;
-            color: #000;
-            box-shadow: 0 0 30px rgba(255, 0, 255, 0.8);
-            transform: scale(1.05);
+            background: rgba(255, 0, 255, 0.2);
+            color: #ff00ff;
+            border-color: #ff00ff;
+            transform: translateY(-3px);
+            box-shadow: 0 0 50px rgba(255, 0, 255, 0.8), inset 0 0 20px rgba(255, 0, 255, 0.2);
         }
 
-        #menu-btn {
-            border-color: #ff0000;
-            color: #ff0000;
-            background: rgba(255, 0, 0, 0.1);
-            box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
-        }
-
-        #menu-btn:hover {
-            background: #ff0000;
-            color: #000;
-            box-shadow: 0 0 30px rgba(255, 0, 0, 0.8);
-        }
-
-        border-radius: 3px;
-        background: rgba(255, 255, 255, 0.1);
-        outline: none;
-        -webkit-appearance: none;
-        appearance: none;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            background: #00ff88;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
-        }
-
-        input[type="range"]::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
-            background: #00ff88;
-            border-radius: 50%;
-            cursor: pointer;
-            border: none;
-            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
-        }
-
-        .pause-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-top: 30px;
-        }
-
-        .pause-btn {
-            width: 100%;
-            padding: 15px;
-            border: none;
-            border-radius: 12px;
-            color: #fff;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            text-transform: uppercase;
-            transition: all 0.3s ease;
-        }
-
-        #resume-btn {
-            background: linear-gradient(135deg, #00ff88, #00cc6a);
-            box-shadow: 0 5px 20px rgba(0, 255, 136, 0.3);
-        }
-
-        #resume-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 255, 136, 0.5);
-        }
-
-        #menu-btn {
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
-            box-shadow: 0 5px 20px rgba(231, 76, 60, 0.3);
-        }
-
-        #menu-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(231, 76, 60, 0.5);
-        }
+        /* Specific override for Menu button to be distinct? 
+           User wants it like start screen, so maybe keep both unified or make one Red but in neon style.
+           Let's keep them unified (Blue/Magenta) for consistency with Start Screen.
+           Or maybe make "Return to Menu" slightly different? 
+           Let's stick to the requested "Start Screen" look which is Cyan/Magenta.
+        */
     </style>
 </head>
 
@@ -669,7 +604,7 @@
     <!-- Pause Menu -->
     <div id="pause-menu">
         <div id="pause-content">
-            <h2>⏸️ Paused</h2>
+            <h2>SYSTEM PAUSED</h2>
 
             <div class="setting-group">
                 <div class="setting-label">
@@ -697,11 +632,64 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
-            background: radial-gradient(circle, transparent 50%, rgba(255, 0, 0, 0.6) 100%);
+            /* Aggressive red vignette */
+            background: radial-gradient(circle, transparent 40%, rgba(255, 0, 0, 0.8) 100%);
             opacity: 0;
-            transition: opacity 0.2s ease-out;
+            transition: opacity 0.1s ease-out;
             z-index: 150;
-            mix-blend-mode: overlay;
+            /* Removed mix-blend-mode to ensure visibility on dark backgrounds */
+            box-shadow: inset 0 0 100px rgba(255, 0, 0, 0.5);
+        }
+
+        /* Screen Shake Animation */
+        @keyframes shake {
+            0% {
+                transform: translate(0, 0);
+            }
+
+            10% {
+                transform: translate(-10px, -10px);
+            }
+
+            20% {
+                transform: translate(10px, 10px);
+            }
+
+            30% {
+                transform: translate(-10px, 10px);
+            }
+
+            40% {
+                transform: translate(10px, -10px);
+            }
+
+            50% {
+                transform: translate(-5px, -5px);
+            }
+
+            60% {
+                transform: translate(5px, 5px);
+            }
+
+            70% {
+                transform: translate(-5px, 5px);
+            }
+
+            80% {
+                transform: translate(5px, -5px);
+            }
+
+            90% {
+                transform: translate(0, 0);
+            }
+
+            100% {
+                transform: translate(0, 0);
+            }
+        }
+
+        .shake-effect {
+            animation: shake 0.3s cubic-bezier(.36, .07, .19, .97) both;
         }
     </style>
 

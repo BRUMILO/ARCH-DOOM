@@ -31,7 +31,7 @@ export class Weapon {
         return (now - this.lastShot) >= this.fireRate;
     }
 
-    shoot(camera, enemies) {
+    shoot(camera, enemies, walls) {
         if (!this.canShoot()) return null;
 
         this.lastShot = performance.now() / 1000;
@@ -44,27 +44,57 @@ export class Weapon {
         this.raycaster.set(camera.position, direction);
         this.raycaster.far = this.range;
 
-        // Check for hits on enemies
+        // 1. Check Intersection with Walls
+        let wallHitDistance = Infinity;
+        let wallHitPoint = null;
+
+        if (walls) {
+            const wallIntersects = this.raycaster.intersectObjects(walls, true);
+            // Filter for solid meshes only
+            const solidWallHit = wallIntersects.find(i => i.object.type === 'Mesh');
+            if (solidWallHit) {
+                wallHitDistance = solidWallHit.distance;
+                wallHitPoint = solidWallHit.point;
+            }
+        }
+
+        // 2. Check Intersection with Enemies
         const enemyMeshes = enemies.filter(e => !e.isDead()).map(e => e.mesh);
-        // Use recursive=true to hit sub-objects (core, ring, spikes)
-        const intersects = this.raycaster.intersectObjects(enemyMeshes, true);
+        const enemyIntersects = this.raycaster.intersectObjects(enemyMeshes, true);
 
         let hitPoint = null;
         let hitEnemy = null;
+        let finalDistance = this.range;
 
-        if (intersects.length > 0) {
-            // Hit an enemy part
-            const hitObject = intersects[0].object;
-            // Find enemy that owns this part (check if mesh matches or is parent)
-            hitEnemy = enemies.find(e => e.mesh === hitObject || e.mesh === hitObject.parent);
-            hitPoint = intersects[0].point;
+        if (enemyIntersects.length > 0) {
+            const hitObject = enemyIntersects[0].object;
+            const dist = enemyIntersects[0].distance;
 
-            if (hitEnemy) {
-                hitEnemy.takeDamage();
-                this.showHitEffect(hitEnemy);
+            // Check if wall is closer (Blocking the shot)
+            if (wallHitDistance < dist) {
+                // Outline hit the wall
+                hitPoint = wallHitPoint;
+                finalDistance = wallHitDistance;
+                // Create particles at wall hit
+                this.createImpactParticles(wallHitPoint);
+            } else {
+                // Hit the enemy
+                hitEnemy = enemies.find(e => e.mesh === hitObject || e.mesh === hitObject.parent);
+                hitPoint = enemyIntersects[0].point;
+                finalDistance = dist;
+
+                if (hitEnemy) {
+                    hitEnemy.takeDamage();
+                    this.showHitEffect(hitEnemy);
+                }
             }
+        } else if (wallHitDistance < Infinity) {
+            // Only hit wall
+            hitPoint = wallHitPoint;
+            finalDistance = wallHitDistance;
+            this.createImpactParticles(wallHitPoint);
         } else {
-            // Calculate miss point at max range
+            // Miss
             hitPoint = new THREE.Vector3();
             hitPoint.copy(direction).multiplyScalar(this.range).add(camera.position);
         }
@@ -75,8 +105,8 @@ export class Weapon {
 
         return hitEnemy ? {
             enemy: hitEnemy,
-            distance: intersects[0].distance,
-            point: intersects[0].point
+            distance: finalDistance,
+            point: hitPoint
         } : null;
     }
 

@@ -131,10 +131,16 @@ export class Enemy {
         this.raycaster.far = this.speed * delta + 0.5;
 
         const walls = this.level.walls;
-        const intersects = this.raycaster.intersectObjects(walls);
+        // ENABLE RECURSIVE for Groups
+        const intersects = this.raycaster.intersectObjects(walls, true);
+
+        // Filter out LineSegments (edges) if they block movement unexpectedly,
+        // but usually just recursive is enough.
+        // Let's filter to be safe like player.js
+        const hitWall = intersects.find(i => i.object.type === 'Mesh' && i.distance < this.speed * delta + 0.5);
 
         // Only move if no wall in the way
-        if (intersects.length === 0 || intersects[0].distance > this.speed * delta) {
+        if (!hitWall) {
             this.mesh.position.addScaledVector(direction, this.speed * delta);
         }
     }

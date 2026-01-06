@@ -86,7 +86,7 @@ function spawnEnemies(count) {
 // Shooting mechanic - click to shoot
 document.addEventListener('click', () => {
     if (player.controls.isLocked && weapon.canShoot()) {
-        const hit = weapon.shoot(engine.camera, enemies);
+        const hit = weapon.shoot(engine.camera, enemies, level.walls);
 
         if (hit && hit.enemy.isDead()) {
             // Remove dead enemy after a short delay
@@ -203,12 +203,16 @@ function showLevelCompleteModal(currentLevel, nextLevel) {
     message.textContent = `SECTOR ${currentLevel} SECURED`;
     stats.textContent = `LOADING SECTOR ${nextLevel}...`;
 
-    player.controls.unlock(); // Unlock cursor immediately
+    // Show modal BEFORE unlocking to prevent Pause Menu from triggering via 'unlock' event
     modal.classList.add('show');
+    player.controls.unlock();
 
     // Setup next level button
     const nextBtn = document.getElementById('next-level-btn');
     nextBtn.onclick = () => {
+        // Re-lock controls immediately (requires user gesture, which click is)
+        player.controls.lock();
+
         modal.classList.remove('show');
 
         // Load next level

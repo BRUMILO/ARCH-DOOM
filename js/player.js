@@ -174,12 +174,24 @@ export class Player {
         // Cast ray from camera position in movement direction
         this.raycaster.set(this.camera.position, movementVector);
 
-        const intersects = this.raycaster.intersectObjects(collisionObjects);
+        // Recursive necessary for Groups (Tron walls)
+        const intersects = this.raycaster.intersectObjects(collisionObjects, true);
 
-        // Check if any wall is too close
-        if (intersects.length > 0 && intersects[0].distance < this.collisionDistance) {
-            return false; // Collision detected, block movement
+        // Check intersections
+        for (let i = 0; i < intersects.length; i++) {
+            const hit = intersects[i];
+
+            // Ignore LineSegments (edges) and Triggers (if any ended up in list)
+            // Only collide with solid Wall Meshes
+            if (hit.object.type === 'LineSegments') continue;
+            if (hit.object.userData && hit.object.userData.isTrigger) continue;
+
+            if (hit.distance < this.collisionDistance) {
+                return false; // Collision detected with solid wall
+            }
         }
+
+        return true; // No collision, allow movement
 
         return true; // No collision, allow movement
     }
@@ -211,8 +223,14 @@ export class Player {
             overlay.style.opacity = '1';
             setTimeout(() => {
                 overlay.style.opacity = '0';
-            }, 300);
+            }, 400); // Longer duration
         }
+
+        // Trigger Screen Shake
+        document.body.classList.add('shake-effect');
+        setTimeout(() => {
+            document.body.classList.remove('shake-effect');
+        }, 300);
 
         if (this.health <= 0) {
             this.die();
