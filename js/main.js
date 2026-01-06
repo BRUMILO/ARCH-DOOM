@@ -4,27 +4,26 @@ import { Player } from './player.js';
 import { Level } from './level.js';
 import { QuizManager } from './quiz.js';
 import { Minimap } from './minimap.js';
+import { Enemy } from './enemy.js';
+import { Weapon } from './weapon.js';
 
 const engine = new Engine();
 const player = new Player(engine.camera, engine.renderer.domElement);
 const level = new Level(engine.scene);
 const minimap = new Minimap('minimap');
+const weapon = new Weapon(engine.scene);
+const enemies = [];
 
-const quizManager = new QuizManager(player.controls, () => {
+const quizManager = new QuizManager(player.controls, player, () => {
     // On Level Complete
     console.log("Level Complete!");
     const nextLevel = level.currentLevelIndex + 1;
     if (nextLevel <= 3) {
-        alert("LEVEL " + level.currentLevelIndex + " COMPLETE! LOADING LEVEL " + nextLevel);
-        level.loadLevel(nextLevel);
-        document.getElementById('level-indicator').textContent = "LEVEL " + nextLevel;
-        // Reset quiz counter for new level with dynamic count from the level object
-        quizManager.resetLevel(level.questions.length);
-        // Reset player position
-        engine.camera.position.set(0, 1.6, 0);
+        // Show level complete modal
+        showLevelCompleteModal(level.currentLevelIndex, nextLevel);
     } else {
-        alert("CONGRATULATIONS! YOU HAVE COMPLETED THE ENTERPRISE ARCHITECTURE CHALLENGE!");
-        location.reload();
+        // Show victory modal
+        showVictoryModal();
     }
 });
 
@@ -52,12 +51,56 @@ function animate() {
             }
         });
 
+        // Update enemies AI and check collisions
+        enemies.forEach((enemy) => {
+            enemy.update(delta, player.camera.position);
+
+            // Check if enemy attacks player
+            const dist = enemy.mesh.position.distanceTo(player.camera.position);
+            if (!enemy.isDead() && dist < enemy.attackRange && enemy.canAttack()) {
+                player.takeDamage(enemy.getAttackDamage());
+                enemy.resetAttackCooldown();
+            }
+        });
+
         engine.render();
 
         // Update minimap
-        minimap.update(player.camera.position, player.camera.rotation, level);
+        minimap.update(player.camera.position, player.camera.rotation, level, enemies);
     }
 }
+
+// Spawn enemies function
+function spawnEnemies(count) {
+    // Remove old enemies
+    enemies.forEach(e => engine.scene.remove(e.mesh));
+    enemies.length = 0;
+
+    // Spawn new ones
+    for (let i = 0; i < count; i++) {
+        const enemy = new Enemy(engine.scene, level);
+        enemies.push(enemy);
+    }
+}
+
+// Shooting mechanic - click to shoot
+document.addEventListener('click', () => {
+    if (player.controls.isLocked && weapon.canShoot()) {
+        const hit = weapon.shoot(engine.camera, enemies);
+
+        if (hit && hit.enemy.isDead()) {
+            // Remove dead enemy after a short delay
+            setTimeout(() => {
+                engine.scene.remove(hit.enemy.mesh);
+                const index = enemies.indexOf(hit.enemy);
+                if (index > -1) enemies.splice(index, 1);
+            }, 500);
+        }
+    }
+});
+
+// Initial spawn
+spawnEnemies(3);
 
 animate();
 
@@ -104,9 +147,13 @@ function hidePauseMenu() {
 
 // DETECT POINTER UNLOCK (Pressed ESC or lost focus)
 player.controls.addEventListener('unlock', () => {
-    // Only show pause menu if the quiz is NOT active
-    // If quiz is active, the cursor is unlocked intentionally for the quiz
-    if (quizOverlay.style.display !== 'flex') {
+    // Only show pause menu if no other overlay is active
+    const quizActive = quizOverlay.style.display === 'flex';
+    const gameOverActive = document.getElementById('game-over-modal').classList.contains('show');
+    const levelCompleteActive = document.getElementById('level-complete-modal').classList.contains('show');
+    const victoryActive = document.getElementById('victory-modal').classList.contains('show');
+
+    if (!quizActive && !gameOverActive && !levelCompleteActive && !victoryActive) {
         showPauseMenu();
     }
 });
@@ -146,3 +193,46 @@ sensitivitySlider.addEventListener('input', (e) => {
     player.setMouseSensitivity(newSensitivity);
 });
 
+// Modal functions
+function showLevelCompleteModal(currentLevel, nextLevel) {
+    const modal = document.getElementById('level-complete-modal');
+    const message = document.getElementById('level-complete-message');
+    const stats = document.getElementById('level-stats');
+
+    message.textContent = `SECTOR ${currentLevel} SECURED`;
+    stats.textContent = `LOADING SECTOR ${nextLevel}...`;
+
+    player.controls.unlock(); // Unlock cursor immediately
+    modal.classList.add('show');
+
+    // Setup next level button
+    const nextBtn = document.getElementById('next-level-btn');
+    nextBtn.onclick = () => {
+        modal.classList.remove('show');
+
+        // Load next level
+        level.loadLevel(nextLevel);
+        document.getElementById('level-indicator').textContent = "LEVEL " + nextLevel;
+        quizManager.resetLevel(level.questions.length);
+        spawnEnemies(3 + nextLevel);
+        engine.camera.position.set(0, 1.6, 0);
+
+        // Reset player health/shield
+        player.health = 100;
+        player.shield = 100;
+        player.updateHUD();
+    };
+}
+
+function showVictoryModal() {
+    const modal = document.getElementById('victory-modal');
+    const stats = document.getElementById('final-stats');
+
+    stats.innerHTML = `
+        <div>ALL SECTORS CLEARED</div>
+        <div style="margin-top: 10px;">ARCHITECT STATUS: ELITE</div>
+    `;
+
+    player.controls.unlock(); // Unlock cursor immediately
+    modal.classList.add('show');
+}

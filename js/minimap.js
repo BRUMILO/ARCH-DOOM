@@ -26,7 +26,7 @@ export class Minimap {
         this.backgroundColor = 'rgba(10, 10, 20, 0.95)';
     }
 
-    update(playerPos, playerRotation, level) {
+    update(playerPos, playerRotation, level, enemies = []) {
         if (!this.ctx) return;
 
         // Calculate center offset based on player position
@@ -45,6 +45,9 @@ export class Minimap {
 
         // Draw triggers (questions)
         this.drawTriggers(level.questions);
+
+        // Draw enemies
+        this.drawEnemies(enemies);
 
         // Draw player (always centered)
         this.drawPlayer(playerPos, playerRotation);
@@ -154,5 +157,32 @@ export class Minimap {
         this.ctx.fill();
 
         this.ctx.restore();
+    }
+
+    drawEnemies(enemies) {
+        enemies.forEach(enemy => {
+            if (enemy.isDead()) return;
+
+            const x = enemy.mesh.position.x * this.scale + this.offsetX;
+            const y = enemy.mesh.position.z * this.scale + this.offsetY;
+
+            // Only draw if visible on minimap
+            if (x > -10 && x < this.size + 10 && y > -10 && y < this.size + 10) {
+                this.ctx.fillStyle = '#ff0000'; // Red for enemies
+                this.ctx.strokeStyle = '#ff0000';
+                this.ctx.lineWidth = 2;
+
+                // Draw as circle
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, 5, 0, Math.PI * 2);
+                this.ctx.fill();
+
+                // Add glow
+                this.ctx.shadowBlur = 8;
+                this.ctx.shadowColor = '#ff0000';
+                this.ctx.fill();
+                this.ctx.shadowBlur = 0;
+            }
+        });
     }
 }

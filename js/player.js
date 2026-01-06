@@ -17,6 +17,12 @@ export class Player {
         this.speed = 1.5; // Movement speed (Effective now)
         this.mouseSensitivity = parseFloat(localStorage.getItem('mouseSensitivity')) || 0.002;
 
+        // Health and Shield
+        this.health = 100;
+        this.shield = 100;
+        this.maxHealth = 100;
+        this.maxShield = 100;
+
         // Raycaster for collision detection
         this.raycaster = new THREE.Raycaster();
         this.collisionDistance = 0.5; // Minimum distance from walls
@@ -182,5 +188,47 @@ export class Player {
         this.mouseSensitivity = value;
         this.controls.pointerSpeed = value;
         localStorage.setItem('mouseSensitivity', value.toString());
+    }
+
+    takeDamage(amount) {
+        if (this.shield > 0) {
+            this.shield -= amount;
+            if (this.shield < 0) {
+                // Overflow damage to health
+                this.health += this.shield;
+                this.shield = 0;
+            }
+        } else {
+            this.health -= amount;
+        }
+
+        this.health = Math.max(0, this.health);
+        this.updateHUD();
+
+        if (this.health <= 0) {
+            this.die();
+        }
+    }
+
+    heal(amount) {
+        this.health = Math.min(this.maxHealth, this.health + amount);
+        this.updateHUD();
+    }
+
+    updateHUD() {
+        const healthEl = document.getElementById('health');
+        const shieldEl = document.getElementById('shield');
+
+        if (healthEl) healthEl.textContent = Math.floor(this.health);
+        if (shieldEl) shieldEl.textContent = Math.floor(this.shield);
+    }
+
+    die() {
+        // Unlock cursor so user can click
+        this.controls.unlock();
+
+        // Show arcade game over modal
+        const modal = document.getElementById('game-over-modal');
+        modal.classList.add('show');
     }
 }

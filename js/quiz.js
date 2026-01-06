@@ -1,8 +1,9 @@
 import { questions } from './data.js';
 
 export class QuizManager {
-    constructor(playerControls, onLevelComplete) {
+    constructor(playerControls, player, onLevelComplete) {
         this.playerControls = playerControls;
+        this.player = player;
         this.onLevelComplete = onLevelComplete;
 
         this.overlay = document.getElementById('quiz-overlay');
@@ -51,16 +52,27 @@ export class QuizManager {
 
     checkAnswer(selectedIndex, correctIndex) {
         if (selectedIndex === correctIndex) {
-            this.feedbackEl.textContent = "CORRECT! ACCESS GRANTED.";
+            this.feedbackEl.textContent = "✓ CORRECT! +50 HEALTH";
             this.feedbackEl.style.color = "#0f0";
             this.correctAnswersInLevel++;
+
+            // Heal player
+            if (this.player) {
+                this.player.heal(50);
+            }
 
             setTimeout(() => {
                 this.closeQuiz(true);
             }, 1000);
         } else {
-            this.feedbackEl.textContent = "INCORRECT! ACCESS DENIED.";
+            this.feedbackEl.textContent = "✗ INCORRECT! -25 HEALTH";
             this.feedbackEl.style.color = "#f00";
+
+            // Damage player
+            if (this.player) {
+                this.player.takeDamage(25);
+            }
+
             setTimeout(() => {
                 this.closeQuiz(false);
             }, 1000);
