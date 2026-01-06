@@ -66,7 +66,14 @@ function animate() {
         engine.render();
 
         // Update minimap
-        minimap.update(player.camera.position, player.camera.rotation, level, enemies);
+        // Update minimap with STABLE rotation (Vector-based)
+        const forward = new THREE.Vector3();
+        player.camera.getWorldDirection(forward);
+        // atan2(x, z) gives angle relative to North (Z axis)
+        // This is much more stable than Euler angles during fast movement
+        const playerAngle = Math.atan2(forward.x, forward.z);
+
+        minimap.update(player.camera.position, playerAngle, level, enemies);
     }
 }
 

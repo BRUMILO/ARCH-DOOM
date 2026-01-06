@@ -130,30 +130,51 @@ export class Minimap {
         });
     }
 
-    drawPlayer(pos, rotation) {
+    drawPlayer(pos, rotationAngle) {
         const x = this.size / 2;
         const y = this.size / 2;
 
         this.ctx.save();
         this.ctx.translate(x, y);
-        this.ctx.rotate(-rotation.y); // Negative because canvas Y is inverted
+        this.ctx.rotate(-rotationAngle + Math.PI); // Adjust for atan2(x,z) vs Canvas
 
-        // Draw triangle pointing in direction
-        this.ctx.fillStyle = this.playerColor;
-        this.ctx.strokeStyle = this.playerColor;
-        this.ctx.lineWidth = 2;
+        // 0. Field of View (Gradient Cone)
+        // Create a gradient scanning effect
+        const gradient = this.ctx.createRadialGradient(0, 0, 5, 0, 0, 80); // Increased range slightly
+        gradient.addColorStop(0, 'rgba(255, 255, 0, 0.4)');
+        gradient.addColorStop(1, 'rgba(255, 255, 0, 0)');
 
+        this.ctx.fillStyle = gradient;
         this.ctx.beginPath();
-        this.ctx.moveTo(0, -10);     // Front point (Up)
-        this.ctx.lineTo(-6, 7);      // Back left
-        this.ctx.lineTo(6, 7);       // Back right
-        this.ctx.closePath();
+        this.ctx.moveTo(0, 0);
+        // Rotate the arc to point UP (-Pi/2) to match the arrow
+        // Cone width: 60 degrees (PI/3).
+        // Start: -PI/2 - PI/6 = -2PI/3
+        // End:   -PI/2 + PI/6 = -PI/3
+        this.ctx.arc(0, 0, 80, -Math.PI / 2 - Math.PI / 6, -Math.PI / 2 + Math.PI / 6);
+        this.ctx.lineTo(0, 0);
         this.ctx.fill();
-        this.ctx.stroke();
 
-        // Add glow effect
+        // 1. Central Dot (Pulse Effect)
+        // Breathe effect based on time
+        const pulse = 1 + Math.sin(performance.now() / 200) * 0.2; // 0.8 to 1.2 scale
+
+        this.ctx.fillStyle = '#ffffff';
         this.ctx.shadowBlur = 10;
-        this.ctx.shadowColor = this.playerColor;
+        this.ctx.shadowColor = '#ffffff';
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, 3 * pulse, 0, Math.PI * 2); // Pulse size
+        this.ctx.fill();
+        this.ctx.shadowBlur = 0; // Reset shadow
+
+        // 2. Direction Arrow (Sharp Pointer)
+        this.ctx.fillStyle = this.playerColor;
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, -12); // Tip
+        this.ctx.lineTo(-5, -2);
+        this.ctx.lineTo(0, -4);  // Indent back
+        this.ctx.lineTo(5, -2);
+        this.ctx.closePath();
         this.ctx.fill();
 
         this.ctx.restore();
