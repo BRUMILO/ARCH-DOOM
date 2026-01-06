@@ -100,7 +100,7 @@ document.addEventListener('click', () => {
 });
 
 // Initial spawn
-spawnEnemies(3);
+spawnEnemies(10);
 
 animate();
 
@@ -139,10 +139,11 @@ function showPauseMenu() {
 }
 
 // Hide pause menu and resume game
+// Hide pause menu and resume game
 function hidePauseMenu() {
-    isPaused = false;
-    pauseMenu.style.display = 'none';
-    player.controls.lock(); // Re-lock pointer controls
+    // Only attempt to lock. The 'lock' event listener will handle hiding the menu.
+    // This prevents the menu from disappearing if the lock request fails.
+    player.controls.lock();
 }
 
 // DETECT POINTER UNLOCK (Pressed ESC or lost focus)
@@ -214,7 +215,7 @@ function showLevelCompleteModal(currentLevel, nextLevel) {
         level.loadLevel(nextLevel);
         document.getElementById('level-indicator').textContent = "LEVEL " + nextLevel;
         quizManager.resetLevel(level.questions.length);
-        spawnEnemies(3 + nextLevel);
+        spawnEnemies(10 + (nextLevel * 3)); // 13, 16 enemies for next levels
         engine.camera.position.set(0, 1.6, 0);
 
         // Reset player health/shield

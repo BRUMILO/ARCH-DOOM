@@ -205,6 +205,15 @@ export class Player {
         this.health = Math.max(0, this.health);
         this.updateHUD();
 
+        // Show damage overlay
+        const overlay = document.getElementById('damage-overlay');
+        if (overlay) {
+            overlay.style.opacity = '1';
+            setTimeout(() => {
+                overlay.style.opacity = '0';
+            }, 300);
+        }
+
         if (this.health <= 0) {
             this.die();
         }

@@ -46,15 +46,17 @@ export class Weapon {
 
         // Check for hits on enemies
         const enemyMeshes = enemies.filter(e => !e.isDead()).map(e => e.mesh);
-        const intersects = this.raycaster.intersectObjects(enemyMeshes);
+        // Use recursive=true to hit sub-objects (core, ring, spikes)
+        const intersects = this.raycaster.intersectObjects(enemyMeshes, true);
 
         let hitPoint = null;
         let hitEnemy = null;
 
         if (intersects.length > 0) {
-            // Hit an enemy
-            const hitMesh = intersects[0].object;
-            hitEnemy = enemies.find(e => e.mesh === hitMesh);
+            // Hit an enemy part
+            const hitObject = intersects[0].object;
+            // Find enemy that owns this part (check if mesh matches or is parent)
+            hitEnemy = enemies.find(e => e.mesh === hitObject || e.mesh === hitObject.parent);
             hitPoint = intersects[0].point;
 
             if (hitEnemy) {
@@ -79,6 +81,8 @@ export class Weapon {
     }
 
     showMuzzleFlash(camera) {
+        if (!this.muzzleFlash) return;
+
         // Position flash slightly in front of camera
         this.muzzleFlash.position.copy(camera.position);
 
@@ -105,9 +109,6 @@ export class Weapon {
 
     showTracer(start, end) {
         // Offset start slightly below camera (like holding a gun)
-        const gunOffset = new THREE.Vector3(0.2, -0.2, 0.5);
-        // We can't easily calculate relative gun position without player mesh, 
-        // so just starting from slightly below camera center is fine
         const startPos = start.clone();
 
         // Slightly lower than eye level
@@ -136,9 +137,20 @@ export class Weapon {
     }
 
     showHitEffect(enemy) {
-        // Flash the enemy white briefly
-        const originalColor = enemy.mesh.material.color.clone();
-        enemy.mesh.material.color.setHex(0xffffff);
+        // Flash the enemy core white briefly
+        // Note: enemy.mesh is a Group, so we flash enemy.core if it exists, otherwise fallback
+        const targetMesh = enemy.core || enemy.mesh;
+
+        if (targetMesh.material) {
+            const originalColor = targetMesh.material.color.clone();
+            targetMesh.material.color.setHex(0xffffff);
+
+            setTimeout(() => {
+                if (!enemy.isDead() && targetMesh.material) {
+                    targetMesh.material.color.copy(originalColor);
+                }
+            }, 100);
+        }
 
         // Create impact particles/flash at hit point
         const impactFlash = new THREE.PointLight(0xff0000, 2, 3);
@@ -146,9 +158,6 @@ export class Weapon {
         this.scene.add(impactFlash);
 
         setTimeout(() => {
-            if (!enemy.isDead()) {
-                enemy.mesh.material.color.copy(originalColor);
-            }
             this.scene.remove(impactFlash);
         }, 100);
     }

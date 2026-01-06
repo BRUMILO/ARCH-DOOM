@@ -22,10 +22,44 @@ export class Enemy {
         this.patrolTarget = null;
         this.patrolWaitTime = 0;
 
-        // Create mesh
-        const geometry = new THREE.BoxGeometry(0.8, 1.6, 0.8);
-        const material = new THREE.MeshLambertMaterial({ color: 0xff0000 });
-        this.mesh = new THREE.Mesh(geometry, material);
+        // Create drone mesh group
+        this.mesh = new THREE.Group();
+
+        // 1. Core (Glowing Sphere)
+        const coreGeo = new THREE.SphereGeometry(0.4, 16, 16);
+        const coreMat = new THREE.MeshBasicMaterial({ color: 0xff3300 }); // Bright orange/red
+        this.core = new THREE.Mesh(coreGeo, coreMat);
+        this.mesh.add(this.core);
+
+        // 2. Rotating Ring (Torus)
+        const ringGeo = new THREE.TorusGeometry(0.6, 0.05, 8, 32);
+        const ringMat = new THREE.MeshLambertMaterial({ color: 0x444444 });
+        this.ring = new THREE.Mesh(ringGeo, ringMat);
+        this.mesh.add(this.ring);
+
+        // 3. Spikes/Armor (Cones)
+        const spikeGeo = new THREE.ConeGeometry(0.1, 0.4, 8);
+        const spikeMat = new THREE.MeshLambertMaterial({ color: 0x222222 });
+
+        const spikes = [
+            { x: 0.6, y: 0, z: 0, rotZ: -Math.PI / 2 },
+            { x: -0.6, y: 0, z: 0, rotZ: Math.PI / 2 },
+            { x: 0, y: 0, z: 0.6, rotX: Math.PI / 2 },
+            { x: 0, y: 0, z: -0.6, rotX: -Math.PI / 2 }
+        ];
+
+        spikes.forEach(s => {
+            const spike = new THREE.Mesh(spikeGeo, spikeMat);
+            spike.position.set(s.x, s.y, s.z);
+            if (s.rotZ) spike.rotation.z = s.rotZ;
+            if (s.rotX) spike.rotation.x = s.rotX;
+            this.mesh.add(spike);
+        });
+
+        // Add glow light
+        const light = new THREE.PointLight(0xff3300, 1, 3);
+        this.mesh.add(light);
+
 
         // Spawn at valid position
         this.spawnAtValidPosition();
@@ -67,6 +101,11 @@ export class Enemy {
 
     update(delta, playerPos) {
         if (this.isDead()) return;
+
+        // Animate drone: float and rotate ring
+        this.ring.rotation.x += 2 * delta;
+        this.ring.rotation.y += 2 * delta;
+        this.mesh.position.y = 0.8 + Math.sin(performance.now() / 500) * 0.1; // Bobbing effect
 
         const distanceToPlayer = this.mesh.position.distanceTo(playerPos);
 
@@ -159,9 +198,10 @@ export class Enemy {
 
     die() {
         // Change color to indicate death
-        this.mesh.material.color.setHex(0x444444);
-        this.mesh.material.transparent = true;
-        this.mesh.material.opacity = 0.3;
+        this.core.material.color.setHex(0x444444);
+        this.core.material.transparent = true;
+        this.core.material.opacity = 0.3;
+        this.ring.visible = false; // Hide ring on death
     }
 
     canAttack() {
