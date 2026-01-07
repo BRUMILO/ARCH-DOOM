@@ -93,7 +93,8 @@ export class Player {
 
     update(delta, collisionObjects = []) {
         if (this.controls.isLocked === true) {
-            const timeStep = Math.min(delta, 0.1);
+            // Clamp delta to prevent huge jumps on lag spikes
+            const timeStep = Math.min(delta, 0.05);
 
             const friction = Math.exp(-10.0 * timeStep);
             this.velocity.x *= friction;
@@ -103,26 +104,32 @@ export class Player {
             this.direction.x = Number(this.moveRight) - Number(this.moveLeft);
             this.direction.normalize();
 
-            const acceleration = this.speed * 50.0;
+            const acceleration = this.speed * 60.0;
 
             if (this.moveForward || this.moveBackward || this.moveLeft || this.moveRight) {
                 this.velocity.z -= this.direction.z * acceleration * timeStep;
                 this.velocity.x -= this.direction.x * acceleration * timeStep;
             }
 
+            // Cap velocity to avoid tunneling
+            const maxVelocity = 15.0;
+            this.velocity.x = Math.max(Math.min(this.velocity.x, maxVelocity), -maxVelocity);
+            this.velocity.z = Math.max(Math.min(this.velocity.z, maxVelocity), -maxVelocity);
+
             const moveX = -this.velocity.x * timeStep;
             const moveZ = -this.velocity.z * timeStep;
 
+            // 1. Raycast check for movement blocking (Prevent entering)
             const canMoveX = this.checkCollision(collisionObjects, moveX, 0);
             const canMoveZ = this.checkCollision(collisionObjects, 0, moveZ);
 
-            if (canMoveX) {
-                this.controls.moveRight(moveX);
-            }
-            if (canMoveZ) {
-                this.controls.moveForward(moveZ);
-            }
+            if (canMoveX) this.controls.moveRight(moveX);
+            if (canMoveZ) this.controls.moveForward(moveZ);
 
+            // 2. Sphere-box overlap resolution (Eject if inside)
+            this.resolveWallOverlaps(collisionObjects);
+
+            // Floor clamp
             if (this.camera.position.y < 1.6) {
                 this.camera.position.y = 1.6;
                 this.velocity.y = 0;
@@ -130,14 +137,76 @@ export class Player {
         }
     }
 
+    resolveWallOverlaps(collisionObjects) {
+        const playerRadius = 0.4;
+        const pPos = this.camera.position;
+
+        // We only care about X/Z plane overlap
+        for (const obj of collisionObjects) {
+            // Optimization: Skip walls far away
+            // Wall groups have position at center. Cell size is 4.
+            // If distance > 3.0, impossible to collide (player radius < 0.5, wall radius < 2.8)
+            if (pPos.distanceTo(obj.position) > 3.0) continue;
+
+            // Assuming walls are BoxGeometry
+            if (!obj.geometry || !obj.geometry.boundingBox) continue;
+            if (obj.userData && obj.userData.isTrigger) continue; // Ignore triggers
+
+            // Update wall bounding box world coords if needed (usually static, but good to be safe)
+            // Simple AABB check
+            // Walls are cellSize centered.
+            // We can approximate wall as Box (min, max)
+
+            // Simplification: Check distance to wall center?
+            // Or better: Use Box3.
+            const wallBox = new THREE.Box3().setFromObject(obj);
+            const playerBox = new THREE.Box3(
+                new THREE.Vector3(pPos.x - playerRadius, -10, pPos.z - playerRadius),
+                new THREE.Vector3(pPos.x + playerRadius, 10, pPos.z + playerRadius)
+            );
+
+            if (wallBox.intersectsBox(playerBox)) {
+                // Get overlap depth
+                // Find closest point on wall AABB to player center
+                const clampedX = Math.max(wallBox.min.x, Math.min(wallBox.max.x, pPos.x));
+                const clampedZ = Math.max(wallBox.min.z, Math.min(wallBox.max.z, pPos.z));
+
+                const dx = pPos.x - clampedX;
+                const dz = pPos.z - clampedZ;
+                const distSq = dx * dx + dz * dz;
+
+                if (distSq > 0 && distSq < playerRadius * playerRadius) {
+                    const dist = Math.sqrt(distSq);
+                    const pushX = (dx / dist) * (playerRadius - dist);
+                    const pushZ = (dz / dist) * (playerRadius - dist);
+
+                    // Push camera directly
+                    this.camera.position.x += pushX;
+                    this.camera.position.z += pushZ;
+                } else if (distSq === 0) {
+                    // Deep overlap (center inside box), push to nearest edge
+                    const dMinX = Math.abs(pPos.x - wallBox.min.x);
+                    const dMaxX = Math.abs(pPos.x - wallBox.max.x);
+                    const dMinZ = Math.abs(pPos.z - wallBox.min.z);
+                    const dMaxZ = Math.abs(pPos.z - wallBox.max.z);
+
+                    const min = Math.min(dMinX, dMaxX, dMinZ, dMaxZ);
+
+                    if (min === dMinX) this.camera.position.x -= (min + 0.01);
+                    else if (min === dMaxX) this.camera.position.x += (min + 0.01);
+                    else if (min === dMinZ) this.camera.position.z -= (min + 0.01);
+                    else if (min === dMaxZ) this.camera.position.z += (min + 0.01);
+                }
+            }
+        }
+    }
+
     checkCollision(collisionObjects, moveX, moveZ) {
         if (collisionObjects.length === 0) return true;
 
-        // Get camera direction for raycasting
         const cameraDirection = new THREE.Vector3();
         this.camera.getWorldDirection(cameraDirection);
 
-        // Calculate movement direction in world space
         const right = new THREE.Vector3();
         right.crossVectors(cameraDirection, this.camera.up).normalize();
 
@@ -152,20 +221,28 @@ export class Player {
 
         if (movementVector.length() < 0.001) return true;
 
+        // Raycast Length: Movement + Buffer (0.5)
+        // Check WAIST level (camera.y - 0.6) to hit low walls?
+        // Actually camera height is 1.6. Waist is ~1.0.
+
+        const origin = this.camera.position.clone();
+        // Lower origin slightly to hit walls better? Walls are height 4, so camera height is fine.
+
+        const distToCheck = movementVector.length() + this.collisionDistance;
+
         movementVector.normalize();
-        this.raycaster.set(this.camera.position, movementVector);
+        this.raycaster.set(origin, movementVector);
+        this.raycaster.far = distToCheck;
 
         const intersects = this.raycaster.intersectObjects(collisionObjects, true);
 
         for (let i = 0; i < intersects.length; i++) {
             const hit = intersects[i];
-
             if (hit.object.type === 'LineSegments') continue;
             if (hit.object.userData && hit.object.userData.isTrigger) continue;
 
-            if (hit.distance < this.collisionDistance) {
-                return false;
-            }
+            // Valid collision
+            return false;
         }
 
         return true;
