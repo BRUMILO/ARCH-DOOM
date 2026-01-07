@@ -16,11 +16,14 @@ export class QuizManager {
         this.currentLevel = 1;
         this.correctAnswersInLevel = 0;
         this.totalRequired = 10;
+        this.updateHUD(); // Init HUD
     }
 
     triggerQuiz(triggerObject, levelIndex) {
         this.activeTrigger = triggerObject;
         this.currentLevel = levelIndex;
+        // Ensure HUD matches current level requirement if it changes
+        this.updateHUD();
         this.showQuiz(levelIndex);
         this.playerControls.unlock();
     }
@@ -56,6 +59,7 @@ export class QuizManager {
             this.feedbackEl.textContent = "✓ CORRECT! +50 HEALTH";
             this.feedbackEl.style.color = "#0f0";
             this.correctAnswersInLevel++;
+            this.updateHUD(); // Update HUD
 
             // Play Sound
             if (this.soundManager) this.soundManager.play('correct');
@@ -98,6 +102,7 @@ export class QuizManager {
             if (this.correctAnswersInLevel >= this.totalRequired) {
                 this.onLevelComplete();
                 this.correctAnswersInLevel = 0;
+                this.updateHUD();
             }
         }
     }
@@ -106,6 +111,21 @@ export class QuizManager {
     resetLevel(requiredCount) {
         this.correctAnswersInLevel = 0;
         this.totalRequired = requiredCount || 10;
+        this.updateHUD();
         console.log("Level reset. Required: " + this.totalRequired);
+    }
+
+    updateHUD() {
+        const hudEl = document.getElementById('objectives-count');
+        if (hudEl) {
+            hudEl.textContent = `${this.correctAnswersInLevel} / ${this.totalRequired}`;
+
+            // Visual flair if complete
+            if (this.correctAnswersInLevel >= this.totalRequired) {
+                hudEl.style.color = '#0f0';
+            } else {
+                hudEl.style.color = '#ffff00';
+            }
+        }
     }
 }

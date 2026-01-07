@@ -147,13 +147,11 @@ export class Player {
         // We only care about X/Z plane overlap
         for (const obj of collisionObjects) {
             // Optimization: Skip walls far away
-            // Wall groups have position at center. Cell size is 4.
-            // If distance > 3.0, impossible to collide (player radius < 0.5, wall radius < 2.8)
             if (pPos.distanceTo(obj.position) > 3.0) continue;
 
             // Assuming walls are BoxGeometry
             if (!obj.geometry || !obj.geometry.boundingBox) continue;
-            if (obj.userData && obj.userData.isTrigger) continue; // Ignore triggers
+            if (obj.userData && obj.userData.isTrigger) continue;
 
             const wallBox = new THREE.Box3().setFromObject(obj);
             const playerBox = new THREE.Box3(

@@ -27,7 +27,7 @@ export class Enemy {
 
         // 1. Core (Glowing Sphere)
         const coreGeo = new THREE.SphereGeometry(0.4, 16, 16);
-        const coreMat = new THREE.MeshBasicMaterial({ color: 0xff3300 }); // Bright orange/red
+        const coreMat = new THREE.MeshBasicMaterial({ color: 0xff3300 });
         this.core = new THREE.Mesh(coreGeo, coreMat);
         this.mesh.add(this.core);
 
@@ -80,7 +80,7 @@ export class Enemy {
 
         for (let z = 0; z < map.length; z++) {
             for (let x = 0; x < map[z].length; x++) {
-                if (map[z][x] === 0) { // Empty space
+                if (map[z][x] === 0) {
                     validPositions.push({
                         x: x * this.level.cellSize - 20,
                         z: z * this.level.cellSize - 20
@@ -90,11 +90,7 @@ export class Enemy {
         }
 
         if (validPositions.length > 0) {
-            // Pick random valid position
             const pos = validPositions[Math.floor(Math.random() * validPositions.length)];
-
-            // Add slight random offset to prevent stacking, but keep within cell safe zone
-            // Cell is 4x4. Safe radius ~1.5. Random +/- 1.0 is safe.
             const offsetX = (Math.random() - 0.5) * 2.0;
             const offsetZ = (Math.random() - 0.5) * 2.0;
 
@@ -128,9 +124,9 @@ export class Enemy {
     }
 
     resolveWallCollisions() {
-        const radius = 0.7; // Enemy physical radius
+        const radius = 0.7;
         const walls = this.level.walls;
-        const wallHalfSize = 2.0; // Walls are 4x4, so half is 2.0
+        const wallHalfSize = 2.0;
 
         for (const wallGroup of walls) {
             const wx = wallGroup.position.x;
@@ -231,14 +227,13 @@ export class Enemy {
         direction.y = 0;
 
         if (direction.length() < 0.5) {
-            // Reached target
             this.patrolTarget = null;
-            this.patrolWaitTime = 1 + Math.random() * 2; // Wait 1-3 seconds
+            this.patrolWaitTime = 1 + Math.random() * 2;
             return;
         }
 
         direction.normalize();
-        this.mesh.position.addScaledVector(direction, this.speed * 0.5 * delta); // Slower patrol
+        this.mesh.position.addScaledVector(direction, this.speed * 0.5 * delta);
     }
 
     takeDamage() {

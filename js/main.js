@@ -88,6 +88,14 @@ function spawnEnemies(count) {
     }
 }
 
+// Global Kill Count
+let killCount = 0;
+
+function updateKillHUD() {
+    const el = document.getElementById('kill-count');
+    if (el) el.textContent = killCount;
+}
+
 // Shooting mechanic - click to shoot
 document.addEventListener('click', () => {
     // Resume audio context if needed
@@ -99,6 +107,8 @@ document.addEventListener('click', () => {
         const hit = weapon.shoot(engine.camera, enemies, level.walls);
 
         if (hit && hit.enemy.isDead()) {
+            killCount++;
+            updateKillHUD();
             setTimeout(() => {
                 engine.scene.remove(hit.enemy.mesh);
                 const index = enemies.indexOf(hit.enemy);

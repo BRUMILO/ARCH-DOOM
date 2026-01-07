@@ -3,7 +3,7 @@ export class SoundManager {
     constructor() {
         this.ctx = new (window.AudioContext || window.webkitAudioContext)();
         this.masterGain = this.ctx.createGain();
-        this.masterGain.gain.value = 0.3; // Specific volume
+        this.masterGain.gain.value = 0.3;
         this.masterGain.connect(this.ctx.destination);
     }
 
@@ -70,7 +70,7 @@ export class SoundManager {
         const osc1 = this.ctx.createOscillator();
         const gain1 = this.ctx.createGain();
         osc1.type = 'square';
-        osc1.frequency.setValueAtTime(880, now); // A5
+        osc1.frequency.setValueAtTime(880, now);
         gain1.gain.setValueAtTime(0.1, now);
         gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
         osc1.connect(gain1);
@@ -82,7 +82,7 @@ export class SoundManager {
         const osc2 = this.ctx.createOscillator();
         const gain2 = this.ctx.createGain();
         osc2.type = 'square';
-        osc2.frequency.setValueAtTime(1760, now + 0.1); // A6
+        osc2.frequency.setValueAtTime(1760, now + 0.1);
         gain2.gain.setValueAtTime(0.1, now + 0.1);
         gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
         osc2.connect(gain2);
@@ -93,7 +93,7 @@ export class SoundManager {
 
     playCorrect() {
         // Major Triad Arpeggio (Fast)
-        const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+        const notes = [523.25, 659.25, 783.99];
         const now = this.ctx.currentTime;
 
         notes.forEach((freq, i) => {
@@ -133,8 +133,7 @@ export class SoundManager {
     }
 
     playLevelComplete() {
-        // Fanfare
-        const notes = [523.25, 523.25, 523.25, 783.99]; // C, C, C, G
+        const notes = [523.25, 523.25, 523.25, 783.99];
         const now = this.ctx.currentTime;
 
         notes.forEach((freq, i) => {

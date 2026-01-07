@@ -29,6 +29,18 @@
             <div class="hud-label">Shield</div>
             <div class="hud-value" id="shield">100</div>
         </div>
+
+        <!-- NEW STATS HUD (Top Right) -->
+        <div id="stats-hud">
+            <div class="hud-item" style="text-align: right;">
+                <div class="hud-label">KILLS</div>
+                <div class="hud-value" id="kill-count">0</div>
+            </div>
+            <div class="hud-item" style="text-align: right;">
+                <div class="hud-label">OBJECTIVES</div>
+                <div class="hud-value" id="objectives-count">0/10</div>
+            </div>
+        </div>
     </div>
 
     <!-- Minimap -->
@@ -61,7 +73,7 @@
         </div>
 
         <div id="mission" class="tab-pane active">
-            <h3 class="tab-header">⚡ OBJETIVO CRÍTICO</h3>
+            <h3 class="tab-header">> OBJETIVO CRÍTICO</h3>
             <p>La red neuronal está comprometida. Tu misión es infiltrarte en el sistema y recuperar los <span
                     style="color: #ffff00;">Holocrones de Datos</span>.</p>
             <p>Ten cuidado: los sistemas de seguridad defensivos intentarán detenerte. Usa tu conocimiento para
@@ -120,7 +132,7 @@
     <!-- Pause Menu -->
     <div id="pause-menu">
         <div id="pause-content">
-            <h2>SYSTEM PAUSED</h2>
+            <h2>GAME PAUSED</h2>
 
             <div class="setting-group">
                 <div class="setting-label">
@@ -144,18 +156,18 @@
     <div id="game-over-modal" class="arcade-modal">
         <div class="modal-content">
             <div class="modal-title">GAME OVER</div>
-            <div class="modal-message">SYSTEM FAILURE<br>AGENT TERMINATED</div>
-            <button class="modal-btn" onclick="location.reload()">RETRY MISSION</button>
+            <div class="modal-message">HAS SIDO ELIMINADO</div>
+            <button class="modal-btn" onclick="location.reload()">REINTENTAR MISIÓN</button>
         </div>
     </div>
 
     <!-- Level Complete Modal -->
     <div id="level-complete-modal" class="arcade-modal">
         <div class="modal-content">
-            <div class="modal-title">LEVEL CLEAR</div>
-            <div class="modal-message" id="level-complete-message">SECTOR SECURED</div>
+            <div class="modal-title">LEVEL PASSED</div>
+            <div class="modal-message" id="level-complete-message">SECTOR LIBERADO</div>
             <div class="modal-stats" id="level-stats"></div>
-            <button class="modal-btn" id="next-level-btn">PROCEED TO NEXT SECTOR</button>
+            <button class="modal-btn" id="next-level-btn">SIGUIENTE NIVEL</button>
         </div>
     </div>
 
@@ -164,12 +176,12 @@
         <div class="modal-content">
             <div class="modal-title">MISSION<br>COMPLETE</div>
             <div class="modal-message">
-                ENTERPRISE ARCHITECTURE<br>
-                MASTERY ACHIEVED<br><br>
-                ALL SECTORS LIBERATED
+                ARQUITECTURA EMPRESARIAL<br>
+                MAESTRÍA ALCANZADA<br><br>
+                TODOS LOS SECTORES LIBERADOS
             </div>
             <div class="modal-stats" id="final-stats"></div>
-            <button class="modal-btn" onclick="location.reload()">PLAY AGAIN</button>
+            <button class="modal-btn" onclick="location.reload()">VOLVER A JUGAR</button>
         </div>
     </div>
 

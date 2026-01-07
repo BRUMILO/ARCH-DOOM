@@ -59,10 +59,52 @@ body::after {
     bottom: 30px;
     left: 30px;
     display: flex;
-    gap: 20px;
+    flex-direction: column;
+    /* Keep vertical stack */
+    gap: 15px;
+    /* Gap between Health and Shield */
+    z-index: 10;
     pointer-events: none;
     animation: slideUp 0.5s ease-out;
-    z-index: 50;
+}
+
+#stats-hud {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    /* Reduced gap */
+    z-index: 10;
+    pointer-events: none;
+    align-items: flex-end;
+    /* Align right */
+    animation: slideUp 0.5s ease-out;
+}
+
+/* Compact styles for Stats */
+#stats-hud .hud-item {
+    padding: 8px 15px;
+    /* Reduced padding */
+    border-width: 2px;
+    /* Thinner border */
+    background: rgba(10, 10, 20, 0.6);
+    /* More transparent */
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.3), inset 0 0 10px rgba(0, 255, 255, 0.05);
+    /* Softer glow */
+}
+
+#stats-hud .hud-label {
+    font-size: 9px;
+    margin-bottom: 3px;
+    text-align: right;
+}
+
+#stats-hud .hud-value {
+    font-size: 20px;
+    /* Smaller font */
+    text-align: right;
 }
 
 @keyframes slideUp {
