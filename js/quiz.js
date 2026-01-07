@@ -16,7 +16,7 @@ export class QuizManager {
         this.currentLevel = 1;
         this.correctAnswersInLevel = 0;
         this.totalRequired = 10;
-        this.updateHUD(); // Init HUD
+        this.updateHUD();
     }
 
     triggerQuiz(triggerObject, levelIndex) {

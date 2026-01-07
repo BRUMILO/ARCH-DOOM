@@ -144,7 +144,7 @@ const sensitivityToSlider = (sens) => Math.round(((sens - minSens) / rangeSens) 
 const sliderToSensitivity = (val) => minSens + ((val - 1) / 99) * rangeSens;
 
 // Initialize slider with current sensitivity
-const currentSens = parseFloat(localStorage.getItem('mouseSensitivity')) || 0.002;
+const currentSens = parseFloat(localStorage.getItem('mouseSensitivity')) || 0.5;
 const initialSliderValue = sensitivityToSlider(currentSens);
 sensitivitySlider.value = initialSliderValue;
 sensitivityValue.textContent = initialSliderValue;

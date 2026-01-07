@@ -16,7 +16,7 @@ export class Player {
         this.moveRight = false;
 
         this.speed = 1.5;
-        this.mouseSensitivity = parseFloat(localStorage.getItem('mouseSensitivity')) || 0.002;
+        this.mouseSensitivity = parseFloat(localStorage.getItem('mouseSensitivity')) || 0.5;
 
         // Health and Shield
         this.health = 100;

@@ -1,6 +1,6 @@
 # ARCH-DOOM 🔫👾
 
-**ARCH-DOOM** es un desafío de **Arquitectura Empresarial** estilo FPS (First Person Shooter) inspirado en el clásico Doom. El objetivo del juego es infiltrarse en el sistema, recuperar datos y demostrar tus conocimientos sobre conceptos de AE (TOGAF, Zachman, etc.) para avanzar.
+**ARCH-DOOM** es un juego estilo FPS inspirado en el clásico Doom. El objetivo del juego es infiltrarse en el sistema, recuperar datos y demostrar tus conocimientos sobre conceptos de Arquitectura Empresarial (AE) para avanzar.
 
 ## 📋 Características
 
