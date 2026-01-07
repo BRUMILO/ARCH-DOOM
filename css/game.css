@@ -60,9 +60,7 @@ body::after {
     left: 30px;
     display: flex;
     flex-direction: column;
-    /* Keep vertical stack */
     gap: 15px;
-    /* Gap between Health and Shield */
     z-index: 10;
     pointer-events: none;
     animation: slideUp 0.5s ease-out;
@@ -75,24 +73,18 @@ body::after {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    /* Reduced gap */
     z-index: 10;
     pointer-events: none;
     align-items: flex-end;
-    /* Align right */
     animation: slideUp 0.5s ease-out;
 }
 
 /* Compact styles for Stats */
 #stats-hud .hud-item {
     padding: 8px 15px;
-    /* Reduced padding */
     border-width: 2px;
-    /* Thinner border */
     background: rgba(10, 10, 20, 0.6);
-    /* More transparent */
     box-shadow: 0 0 15px rgba(0, 255, 255, 0.3), inset 0 0 10px rgba(0, 255, 255, 0.05);
-    /* Softer glow */
 }
 
 #stats-hud .hud-label {
@@ -103,7 +95,6 @@ body::after {
 
 #stats-hud .hud-value {
     font-size: 20px;
-    /* Smaller font */
     text-align: right;
 }
 
@@ -599,7 +590,6 @@ input[type="range"]::-webkit-slider-thumb {
     color: #00ffff;
     text-shadow: 0 0 10px #00ffff;
     transform: translateY(2px);
-    /* Connect with box */
 }
 
 .tab-btn:hover:not(.active) {
@@ -612,7 +602,6 @@ input[type="range"]::-webkit-slider-thumb {
     background: rgba(0, 255, 255, 0.05);
     border: 2px solid #00ffff;
     border-radius: 0 10px 10px 10px;
-    /* Top left square to match active tab */
     padding: 30px;
     width: 600px;
     min-height: 200px;
