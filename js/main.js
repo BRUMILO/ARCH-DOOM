@@ -6,21 +6,25 @@ import { QuizManager } from './quiz.js';
 import { Minimap } from './minimap.js';
 import { Enemy } from './enemy.js';
 import { Weapon } from './weapon.js';
+import { SoundManager } from './sound_manager.js';
 
 const engine = new Engine();
-const player = new Player(engine.camera, engine.renderer.domElement);
+const soundManager = new SoundManager();
+const player = new Player(engine.camera, engine.renderer.domElement, soundManager);
 const level = new Level(engine.scene);
 const minimap = new Minimap('minimap');
-const weapon = new Weapon(engine.scene, engine.camera);
+const weapon = new Weapon(engine.scene, engine.camera, soundManager);
 const enemies = [];
 
-const quizManager = new QuizManager(player.controls, player, () => {
+const quizManager = new QuizManager(player.controls, player, soundManager, () => {
     // On Level Complete
     console.log("Level Complete!");
+    soundManager.play('level_complete');
     const nextLevel = level.currentLevelIndex + 1;
     if (nextLevel <= 3) {
         showLevelCompleteModal(level.currentLevelIndex, nextLevel);
     } else {
+        soundManager.play('win');
         showVictoryModal();
     }
 });
@@ -44,6 +48,7 @@ function animate() {
             if (trigger.userData.active) {
                 const dist = player.camera.position.distanceTo(trigger.position);
                 if (dist < 3.0) {
+                    soundManager.play('pickup');
                     quizManager.triggerQuiz(trigger, level.currentLevelIndex);
                 }
             }
@@ -85,6 +90,11 @@ function spawnEnemies(count) {
 
 // Shooting mechanic - click to shoot
 document.addEventListener('click', () => {
+    // Resume audio context if needed
+    if (soundManager.ctx.state === 'suspended') {
+        soundManager.ctx.resume();
+    }
+
     if (player.controls.isLocked && weapon.canShoot()) {
         const hit = weapon.shoot(engine.camera, enemies, level.walls);
 
@@ -156,6 +166,7 @@ player.controls.addEventListener('unlock', () => {
 player.controls.addEventListener('lock', () => {
     isPaused = false;
     pauseMenu.style.display = 'none';
+    if (soundManager.ctx.state === 'suspended') soundManager.ctx.resume();
 });
 
 // Handle ESC key - only needed to close menu if already open

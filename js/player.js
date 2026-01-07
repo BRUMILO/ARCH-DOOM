@@ -2,9 +2,10 @@ import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
 export class Player {
-    constructor(camera, domElement) {
+    constructor(camera, domElement, soundManager) {
         this.camera = camera;
         this.controls = new PointerLockControls(camera, document.body);
+        this.soundManager = soundManager;
 
         this.velocity = new THREE.Vector3();
         this.direction = new THREE.Vector3();
@@ -35,10 +36,12 @@ export class Player {
         this.controls.pointerSpeed = this.mouseSensitivity;
 
         const startBtn = document.getElementById('start-btn');
-        startBtn.addEventListener('click', () => {
-            this.controls.lock();
-            document.getElementById('start-screen').style.display = 'none';
-        });
+        if (startBtn) {
+            startBtn.addEventListener('click', () => {
+                this.controls.lock();
+                document.getElementById('start-screen').style.display = 'none';
+            });
+        }
 
         this.controls.addEventListener('unlock', () => {
         });
@@ -152,13 +155,6 @@ export class Player {
             if (!obj.geometry || !obj.geometry.boundingBox) continue;
             if (obj.userData && obj.userData.isTrigger) continue; // Ignore triggers
 
-            // Update wall bounding box world coords if needed (usually static, but good to be safe)
-            // Simple AABB check
-            // Walls are cellSize centered.
-            // We can approximate wall as Box (min, max)
-
-            // Simplification: Check distance to wall center?
-            // Or better: Use Box3.
             const wallBox = new THREE.Box3().setFromObject(obj);
             const playerBox = new THREE.Box3(
                 new THREE.Vector3(pPos.x - playerRadius, -10, pPos.z - playerRadius),
@@ -166,8 +162,6 @@ export class Player {
             );
 
             if (wallBox.intersectsBox(playerBox)) {
-                // Get overlap depth
-                // Find closest point on wall AABB to player center
                 const clampedX = Math.max(wallBox.min.x, Math.min(wallBox.max.x, pPos.x));
                 const clampedZ = Math.max(wallBox.min.z, Math.min(wallBox.max.z, pPos.z));
 
@@ -221,13 +215,7 @@ export class Player {
 
         if (movementVector.length() < 0.001) return true;
 
-        // Raycast Length: Movement + Buffer (0.5)
-        // Check WAIST level (camera.y - 0.6) to hit low walls?
-        // Actually camera height is 1.6. Waist is ~1.0.
-
         const origin = this.camera.position.clone();
-        // Lower origin slightly to hit walls better? Walls are height 4, so camera height is fine.
-
         const distToCheck = movementVector.length() + this.collisionDistance;
 
         movementVector.normalize();
@@ -240,8 +228,6 @@ export class Player {
             const hit = intersects[i];
             if (hit.object.type === 'LineSegments') continue;
             if (hit.object.userData && hit.object.userData.isTrigger) continue;
-
-            // Valid collision
             return false;
         }
 
@@ -267,6 +253,9 @@ export class Player {
 
         this.health = Math.max(0, this.health);
         this.updateHUD();
+
+        // Play Sound
+        if (this.soundManager) this.soundManager.play('damage');
 
         // Show damage overlay
         const overlay = document.getElementById('damage-overlay');
@@ -301,6 +290,9 @@ export class Player {
     }
 
     die() {
+        // Play Sound
+        if (this.soundManager) this.soundManager.play('die');
+
         this.controls.unlock();
         const modal = document.getElementById('game-over-modal');
         modal.classList.add('show');

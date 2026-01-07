@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 
 export class Weapon {
-    constructor(scene, camera) {
+    constructor(scene, camera, soundManager) {
         this.scene = scene;
         this.camera = camera;
+        this.soundManager = soundManager;
         this.raycaster = new THREE.Raycaster();
         this.fireRate = 0.2;
         this.lastShot = 0;
@@ -104,6 +105,11 @@ export class Weapon {
         if (!this.canShoot()) return null;
 
         this.lastShot = performance.now() / 1000;
+
+        // Play Sound
+        if (this.soundManager) {
+            this.soundManager.play('shoot');
+        }
 
         // --- 1. LOGICAL HIT DETECTION  ---
         const direction = new THREE.Vector3();

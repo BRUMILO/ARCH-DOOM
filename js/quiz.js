@@ -1,9 +1,10 @@
 import { questions } from './data.js';
 
 export class QuizManager {
-    constructor(playerControls, player, onLevelComplete) {
+    constructor(playerControls, player, soundManager, onLevelComplete) {
         this.playerControls = playerControls;
         this.player = player;
+        this.soundManager = soundManager;
         this.onLevelComplete = onLevelComplete;
 
         this.overlay = document.getElementById('quiz-overlay');
@@ -56,6 +57,9 @@ export class QuizManager {
             this.feedbackEl.style.color = "#0f0";
             this.correctAnswersInLevel++;
 
+            // Play Sound
+            if (this.soundManager) this.soundManager.play('correct');
+
             // Heal player
             if (this.player) {
                 this.player.heal(50);
@@ -67,6 +71,9 @@ export class QuizManager {
         } else {
             this.feedbackEl.textContent = "✗ INCORRECT! -25 HEALTH";
             this.feedbackEl.style.color = "#f00";
+
+            // Play Sound
+            if (this.soundManager) this.soundManager.play('wrong');
 
             // Damage player
             if (this.player) {
