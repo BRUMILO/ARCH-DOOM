@@ -11,20 +11,26 @@ export class Minimap {
         this.canvas.width = this.size;
         this.canvas.height = this.size;
 
-        // Scale: pixels per game unit
         this.scale = 8;
 
-        // Offset to center the map
         this.offsetX = 0;
         this.offsetY = 0;
 
-        // Colors (arcade theme)
         this.wallColor = '#00ffff';
-        this.playerColor = '#ffff00';
-        this.triggerActiveColor = '#ff00ff';
+        this.playerColor = '#ff00ff';
+        this.triggerActiveColor = '#00ffff';
         this.triggerInactiveColor = '#444444';
         this.backgroundColor = 'rgba(10, 10, 20, 0.95)';
+
+        this.levelColors = {
+            1: '#00ffff',
+            2: '#ff00ff',
+            3: '#00ff00'
+        };
+        this.backgroundColor = 'rgba(10, 10, 20, 0.95)';
+        this.lastLevelIndex = -1;
     }
+
 
     update(playerPos, playerRotation, level, enemies = []) {
         if (!this.ctx) return;
@@ -33,15 +39,28 @@ export class Minimap {
         this.offsetX = this.size / 2 - playerPos.x * this.scale;
         this.offsetY = this.size / 2 - playerPos.z * this.scale;
 
+        // Update colors based on level
+        const themeColor = this.levelColors[level.currentLevelIndex] || '#00ffff';
+        this.wallColor = themeColor;
+        this.triggerActiveColor = themeColor;
+
+        // Update DOM border/shadow if level changed
+        if (this.lastLevelIndex !== level.currentLevelIndex) {
+            this.lastLevelIndex = level.currentLevelIndex;
+            this.canvas.style.borderColor = themeColor;
+            this.canvas.style.boxShadow = `0 0 30px ${themeColor}cc, inset 0 0 30px ${themeColor}26`;
+        }
+
         // Clear canvas
         this.ctx.fillStyle = this.backgroundColor;
         this.ctx.fillRect(0, 0, this.size, this.size);
 
         // Draw grid background
-        this.drawGrid();
+        this.drawGrid(themeColor);
 
         // Draw walls
-        this.drawWalls(level.walls);
+        // Pass the level object to access maps and cell size
+        this.drawWalls(level, themeColor);
 
         // Draw triggers (questions)
         this.drawTriggers(level.questions);
@@ -50,11 +69,12 @@ export class Minimap {
         this.drawEnemies(enemies);
 
         // Draw player (always centered)
-        this.drawPlayer(playerPos, playerRotation);
+        this.drawPlayer(playerPos, playerRotation, themeColor);
     }
 
-    drawGrid() {
-        this.ctx.strokeStyle = 'rgba(0, 255, 255, 0.1)';
+    drawGrid(themeColor = '#00ffff') {
+        this.ctx.strokeStyle = themeColor;
+        this.ctx.globalAlpha = 0.1;
         this.ctx.lineWidth = 1;
 
         const gridSize = this.scale * 5;
@@ -72,30 +92,59 @@ export class Minimap {
             this.ctx.lineTo(this.size, y);
             this.ctx.stroke();
         }
+        this.ctx.globalAlpha = 1.0;
     }
 
-    drawWalls(walls) {
-        this.ctx.fillStyle = this.wallColor;
-        this.ctx.strokeStyle = this.wallColor;
+    drawWalls(level, color = '#00ffff') {
+        const map = level.maps[level.currentLevelIndex];
+        if (!map) return;
+
+        const cellSize = level.cellSize || 4;
+        const scaledSize = cellSize * this.scale;
+
+        this.ctx.fillStyle = '#000000';
+        this.ctx.strokeStyle = color;
         this.ctx.lineWidth = 2;
 
-        walls.forEach(wall => {
-            const x = wall.position.x * this.scale + this.offsetX;
-            const y = wall.position.z * this.scale + this.offsetY;
+        for (let row = 0; row < map.length; row++) {
+            for (let col = 0; col < map[row].length; col++) {
+                if (map[row][col] === 1) {
 
-            if (x > -20 && x < this.size + 20 && y > -20 && y < this.size + 20) {
-                const size = (wall.scale.x > wall.scale.z ? wall.scale.x : wall.scale.z) * this.scale;
-                const width = wall.scale.x * this.scale;
-                const height = wall.scale.z * this.scale;
+                    const wx = col * cellSize - 20;
+                    const wz = row * cellSize - 20;
+                    const centerX = wx * this.scale + this.offsetX;
+                    const centerY = wz * this.scale + this.offsetY;
 
-                this.ctx.fillRect(
-                    x - width / 2,
-                    y - height / 2,
-                    width,
-                    height
-                );
+                    const x = centerX - scaledSize / 2;
+                    const y = centerY - scaledSize / 2;
+
+                    this.ctx.fillRect(x, y, scaledSize, scaledSize);
+
+                    this.ctx.beginPath();
+
+                    if (row === 0 || map[row - 1][col] !== 1) {
+                        this.ctx.moveTo(x, y);
+                        this.ctx.lineTo(x + scaledSize, y);
+                    }
+                    if (row === map.length - 1 || map[row + 1][col] !== 1) {
+                        this.ctx.moveTo(x, y + scaledSize);
+                        this.ctx.lineTo(x + scaledSize, y + scaledSize);
+                    }
+
+                    if (col === 0 || map[row][col - 1] !== 1) {
+                        this.ctx.moveTo(x, y);
+                        this.ctx.lineTo(x, y + scaledSize);
+                    }
+
+                    if (col === map[row].length - 1 || map[row][col + 1] !== 1) {
+                        this.ctx.moveTo(x + scaledSize, y);
+                        this.ctx.lineTo(x + scaledSize, y + scaledSize);
+                    }
+
+                    this.ctx.stroke();
+                }
             }
-        });
+        }
     }
 
     drawTriggers(questions) {
@@ -125,7 +174,7 @@ export class Minimap {
         });
     }
 
-    drawPlayer(pos, rotationAngle) {
+    drawPlayer(pos, rotationAngle, color = '#00ffff') {
         const x = this.size / 2;
         const y = this.size / 2;
 
@@ -133,9 +182,12 @@ export class Minimap {
         this.ctx.translate(x, y);
         this.ctx.rotate(-rotationAngle + Math.PI);
 
+        // Dynamic View Cone Gradient
         const gradient = this.ctx.createRadialGradient(0, 0, 5, 0, 0, 80);
-        gradient.addColorStop(0, 'rgba(255, 255, 0, 0.4)');
-        gradient.addColorStop(1, 'rgba(255, 255, 0, 0)');
+        gradient.addColorStop(0, `${color}40`);
+
+        gradient.addColorStop(0, color + '40');
+        gradient.addColorStop(1, color + '00');
 
         this.ctx.fillStyle = gradient;
         this.ctx.beginPath();
@@ -143,6 +195,7 @@ export class Minimap {
         this.ctx.arc(0, 0, 80, -Math.PI / 2 - Math.PI / 6, -Math.PI / 2 + Math.PI / 6);
         this.ctx.lineTo(0, 0);
         this.ctx.fill();
+
         const pulse = 1 + Math.sin(performance.now() / 200) * 0.2;
 
         this.ctx.fillStyle = '#ffffff';
@@ -153,7 +206,8 @@ export class Minimap {
         this.ctx.fill();
         this.ctx.shadowBlur = 0;
 
-        this.ctx.fillStyle = this.playerColor;
+        // Arrow indicator color matches theme
+        this.ctx.fillStyle = color;
         this.ctx.beginPath();
         this.ctx.moveTo(0, -12);
         this.ctx.lineTo(-5, -2);
